@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- HTML report output
+- Local dashboard server
+- Browser open support
+
 ## 0.1.0
 
 - Initial CLI scanner with terminal, Markdown, and JSON reports

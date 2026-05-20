@@ -10,7 +10,7 @@ inputs:
     required: false
     default: "."
   output:
-    description: Report output format. Use terminal, markdown, or json.
+    description: Report output format. Use terminal, markdown, json, or html.
     required: false
     default: "markdown"
   fail-on:
@@ -40,6 +40,8 @@ runs:
           args+=("--markdown" "--output" "app-launch-guard-report.md")
         elif [ "${{ inputs.output }}" = "json" ]; then
           args+=("--json" "--output" "app-launch-guard-report.json")
+        elif [ "${{ inputs.output }}" = "html" ]; then
+          args+=("--html" "--output" "app-launch-guard-report.html")
         fi
         if [ "${{ inputs.no-color }}" = "true" ]; then
           args+=("--no-color")
@@ -56,4 +58,7 @@ runs:
         fi
         if [ -f app-launch-guard-report.json ]; then
           cat app-launch-guard-report.json
+        fi
+        if [ -f app-launch-guard-report.html ]; then
+          echo "HTML report written to app-launch-guard-report.html"
         fi

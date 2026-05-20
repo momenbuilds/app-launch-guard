@@ -7,7 +7,7 @@ An open-source CLI and GitHub Action that helps iOS developers catch App Store s
 
 ## What it does
 
-AppLaunchGuard statically scans an iOS project and produces terminal, JSON, or Markdown reports for common App Store submission risk areas:
+AppLaunchGuard statically scans an iOS project and produces terminal, JSON, Markdown, or HTML reports for common App Store submission risk areas:
 
 - iOS project detection
 - Info.plist permission usage descriptions
@@ -64,6 +64,11 @@ app-launch-guard scan --json
 app-launch-guard scan --markdown
 app-launch-guard scan --output report.md
 app-launch-guard scan --output report.json
+app-launch-guard scan --html
+app-launch-guard scan --html --output report.html
+app-launch-guard scan --html --open
+app-launch-guard scan --html --serve --open
+app-launch-guard scan --html --serve --port 4174
 app-launch-guard scan --fail-on critical
 app-launch-guard scan --fail-on warning
 app-launch-guard scan --fail-on none
@@ -90,17 +95,30 @@ Use `--include-docs` to scan broader documentation files, or `--include-all` to 
 
 ## Reports
 
-AppLaunchGuard can output reports in three formats:
+AppLaunchGuard can output reports in four formats:
 
 - Terminal output for quick local scans
 - Markdown output for PR comments or artifacts
 - JSON output for automation or dashboards
+- HTML output for a local browser dashboard
 
 Examples:
 
 ```sh
 app-launch-guard scan . --markdown --output report.md
 app-launch-guard scan . --json --output report.json
+app-launch-guard scan . --html --output report.html
+```
+
+## Local dashboard
+
+AppLaunchGuard can generate a local browser report for reviewing scan results visually. The report is fully local, self-contained, and does not send project data anywhere.
+
+```sh
+app-launch-guard scan . --html
+app-launch-guard scan . --html --open
+app-launch-guard scan . --html --serve --open
+app-launch-guard scan . --html --serve --port 4174
 ```
 
 ## GitHub Action usage

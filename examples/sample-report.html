@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AppLaunchGuard Report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --card: #131a22;
+      --card-alt: #17202a;
+      --text: #e6edf3;
+      --muted: #94a3b8;
+      --critical: #ef4444;
+      --warning: #f59e0b;
+      --manual: #8b5cf6;
+      --info: #22c55e;
+      --border: #1f2a37;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: 28px; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .badge.low { background: rgba(34, 197, 94, 0.2); color: var(--info); }
+    .badge.medium { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .badge.high { background: rgba(239, 68, 68, 0.2); color: var(--critical); }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 14px; color: var(--muted); }
+    .card .value { font-size: 22px; font-weight: 600; }
+    .card .value span { color: var(--muted); font-size: 14px; margin-left: 4px; }
+    .section { margin-top: 28px; }
+    .section h2 { margin-bottom: 12px; font-size: 20px; }
+    .issue-grid { display: grid; gap: 12px; }
+    .issue {
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .issue h3 { margin: 0 0 6px; font-size: 16px; }
+    .issue .meta-line { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .pill.critical { background: rgba(239, 68, 68, 0.2); color: var(--critical); }
+    .pill.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .pill.manual_review { background: rgba(139, 92, 246, 0.2); color: var(--manual); }
+    .pill.info { background: rgba(34, 197, 94, 0.2); color: var(--info); }
+    .pill.pass { background: rgba(34, 197, 94, 0.2); color: var(--info); }
+    .pill.fail { background: rgba(239, 68, 68, 0.2); color: var(--critical); }
+    .pill.manual { background: rgba(139, 92, 246, 0.2); color: var(--manual); }
+    .pill.warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .muted { color: var(--muted); }
+    code, pre {
+      background: #0d141c;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      border-radius: 8px;
+      display: block;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    ul { padding-left: 18px; }
+    a { color: #7dd3fc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+    @media (max-width: 640px) {
+      .title-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-row">
+        <h1>AppLaunchGuard</h1>
+        <span class="badge low">Low risk</span>
+      </div>
+      <div class="meta">Scanned path: /Users/momen/Desktop/CODE/SaaS Development/applaunchguide/test/fixtures/ios-basic</div>
+      <div class="meta">Scanned at: 2026-05-20T18:55:11.489Z</div>
+      <div class="meta">Risk score: 22/100</div>
+    </header>
+
+    <section class="grid">
+      
+    <div class="card">
+      <h3>Risk score</h3>
+      <div class="value">22<span>/100</span></div>
+    </div>
+  
+    <div class="card">
+      <h3>Critical</h3>
+      <div class="value">0<span></span></div>
+    </div>
+  
+    <div class="card">
+      <h3>Warnings</h3>
+      <div class="value">1<span></span></div>
+    </div>
+  
+    <div class="card">
+      <h3>Manual review</h3>
+      <div class="value">7<span></span></div>
+    </div>
+  
+    <div class="card">
+      <h3>Info</h3>
+      <div class="value">2<span></span></div>
+    </div>
+  
+    </section>
+
+    <section class="section">
+      <h2>Risk explanation</h2>
+      <p class="muted">AppLaunchGuard helps reduce review risk, but it does not guarantee App Store approval. Developers are responsible for reviewing Apple’s latest guidelines, App Store Connect privacy answers, and legal requirements.</p>
+    </section>
+
+    
+    <section class="section">
+      <h2>Critical</h2>
+      <div class="issue-grid">
+        <div class="issue"><div class="muted">No critical issues found.</div></div>
+      </div>
+    </section>
+  
+    <section class="section">
+      <h2>Warnings</h2>
+      <div class="issue-grid">
+        
+    <div class="issue">
+      <h3>PrivacyInfo.xcprivacy not found</h3>
+      <div class="meta-line">
+        <span class="pill warning">Warning</span>
+        <span class="muted">Privacy Manifest</span>
+      </div>
+      <div>Apple may require privacy manifests for certain data collection, SDKs, and accessed APIs. AppLaunchGuard cannot know the full App Store Connect privacy answers.</div>
+      <div class="meta-line"><strong>Suggested fix:</strong> Add and manually review PrivacyInfo.xcprivacy for the app target and third-party SDK usage.</div><div class="meta-line"><strong>Docs:</strong> <a href="https://developer.apple.com/documentation/bundleresources/privacy_manifest_files">https://developer.apple.com/documentation/bundleresources/privacy_manifest_files</a></div>
+    </div>
+  
+      </div>
+    </section>
+  
+    <section class="section">
+      <h2>Manual review</h2>
+      <div class="issue-grid">
+        
+    <div class="issue">
+      <h3>Launch screen evidence not found</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">App Store Assets</span>
+      </div>
+      <div>No obvious launch screen file was found. This may be fine for some SwiftUI projects, but should be checked before submission.</div>
+      
+    </div>
+  
+    <div class="issue">
+      <h3>fastlane metadata not found</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">App Store Assets</span>
+      </div>
+      <div>Static scanning cannot read App Store Connect. fastlane metadata is optional, but local metadata makes review text easier to audit.</div>
+      
+    </div>
+  
+    <div class="issue">
+      <h3>Screenshot evidence not found</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">App Store Assets</span>
+      </div>
+      <div>No local screenshot folder or fastlane screenshots were found. Confirm iPhone screenshots are ready before submission.</div>
+      <div class="meta-line"><strong>Suggested fix:</strong> Prepare accurate screenshots, including subscription/paywall screens when paid access exists.</div>
+    </div>
+  
+    <div class="issue">
+      <h3>App Store asset checklist needs manual review</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">App Store Assets</span>
+      </div>
+      <div>Confirm iPhone screenshots, 13-inch iPad screenshots if supported, accurate subscription text, privacy policy URL, terms URL, and support URL.</div>
+      
+    </div>
+  
+    <div class="issue">
+      <h3>Privacy policy URL not found</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">Metadata</span>
+      </div>
+      <div>No privacy policy URL was found in local metadata or docs.</div>
+      <div class="meta-line"><strong>Suggested fix:</strong> Confirm the App Store listing includes a reachable privacy policy URL.</div>
+    </div>
+  
+    <div class="issue">
+      <h3>Terms URL not found</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">Metadata</span>
+      </div>
+      <div>No terms URL was found in local metadata or docs.</div>
+      <div class="meta-line"><strong>Suggested fix:</strong> Confirm the App Store listing includes terms, especially for subscriptions or paid access.</div>
+    </div>
+  
+    <div class="issue">
+      <h3>Support URL not found</h3>
+      <div class="meta-line">
+        <span class="pill manual_review">Manual review</span>
+        <span class="muted">Metadata</span>
+      </div>
+      <div>No support URL was found in local metadata or docs.</div>
+      <div class="meta-line"><strong>Suggested fix:</strong> Confirm the App Store listing includes a reachable support URL.</div>
+    </div>
+  
+      </div>
+    </section>
+  
+    <section class="section">
+      <h2>Info</h2>
+      <div class="issue-grid">
+        
+    <div class="issue">
+      <h3>iOS project detected</h3>
+      <div class="meta-line">
+        <span class="pill info">Info</span>
+        <span class="muted">Project Detection</span>
+      </div>
+      <div>Project confidence is 77/100.</div>
+      
+    </div>
+  
+    <div class="issue">
+      <h3>App icon found</h3>
+      <div class="meta-line">
+        <span class="pill info">Info</span>
+        <span class="muted">App Store Assets</span>
+      </div>
+      <div>AppIcon.appiconset was found.</div>
+      <div class="meta-line"><strong>File:</strong> App/Assets.xcassets/AppIcon.appiconset/Contents.json</div>
+    </div>
+  
+      </div>
+    </section>
+  
+
+    <section class="section">
+      <h2>Suggested next actions</h2>
+      <ul>
+        <li>Add and manually review PrivacyInfo.xcprivacy for the app target and third-party SDK usage.</li><li>Review: Launch screen evidence not found</li><li>Review: fastlane metadata not found</li><li>Prepare accurate screenshots, including subscription/paywall screens when paid access exists.</li><li>Review: App Store asset checklist needs manual review</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Checks overview</h2>
+      <div class="issue-grid">
+        
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill pass">Pass</span>
+        <strong>Project detection</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill pass">Pass</span>
+        <strong>Info.plist permissions</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill warn">Warning</span>
+        <strong>Privacy manifest</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill pass">Pass</span>
+        <strong>App Tracking Transparency</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill pass">Pass</span>
+        <strong>Subscriptions</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill pass">Pass</span>
+        <strong>SDK privacy review</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill manual">Manual review</span>
+        <strong>App Store assets</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill pass">Pass</span>
+        <strong>Security</strong>
+      </div>
+    </div>
+  
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill manual">Manual review</span>
+        <strong>Metadata</strong>
+      </div>
+    </div>
+  
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Project summary</h2>
+      
+    <div class="issue">
+      <div class="meta-line"><strong>Project root:</strong> /Users/momen/Desktop/CODE/SaaS Development/applaunchguide/test/fixtures/ios-basic</div>
+      <div class="meta-line"><strong>Confidence score:</strong> 77/100</div>
+      <div class="meta-line"><strong>Info.plist files:</strong> <span>App/Info.plist</span></div>
+      <div class="meta-line"><strong>Privacy manifests:</strong> <span class="muted">None</span></div>
+      <div class="meta-line"><strong>Swift files:</strong> 1</div>
+      <div class="meta-line"><strong>Package managers:</strong> <span class="muted">None</span></div>
+      <div class="meta-line"><strong>Detected SDKs:</strong> <span class="muted">None</span></div>
+      <div class="meta-line"><strong>Detected product IDs:</strong> <span class="muted">None</span></div>
+      <div class="meta-line"><strong>Found URLs:</strong> <span class="muted">None</span></div>
+    </div>
+  
+    </section>
+
+    <footer>
+      <div>GitHub: <a href="https://github.com/momenbuilds/app-launch-guard">https://github.com/momenbuilds/app-launch-guard</a></div>
+      <div>Star the project if it helped. Support: <a href="https://paypal.me/mxcenterprise">https://paypal.me/mxcenterprise</a></div>
+      <div>AppLaunchGuard helps reduce review risk, but it does not guarantee App Store approval. Developers are responsible for reviewing Apple’s latest guidelines, App Store Connect privacy answers, and legal requirements.</div>
+    </footer>
+  </div>
+</body>
+</html>

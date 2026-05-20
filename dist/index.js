@@ -4,6 +4,7 @@
 import { Command } from "commander";
 import fs2 from "fs/promises";
 import path7 from "path";
+import { pathToFileURL } from "url";
 
 // package.json
 var package_default = {
@@ -142,6 +143,306 @@ None found.
   return [`## ${title}`, "", blocks.join("\n\n"), ""].join("\n");
 }
 function capitalize(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+// src/reporters/htmlReporter.ts
+var severityOrder = ["critical", "warning", "manual_review", "info"];
+function renderHtmlReport(report) {
+  const grouped = groupIssues(report.issues);
+  const summaryCards = [
+    renderSummaryCard("Risk score", String(report.riskScore.score), `/${100}`),
+    renderSummaryCard("Critical", String(report.summary.critical), ""),
+    renderSummaryCard("Warnings", String(report.summary.warnings), ""),
+    renderSummaryCard("Manual review", String(report.summary.manualReview), ""),
+    renderSummaryCard("Info", String(report.summary.info), "")
+  ].join("");
+  const issueSections = severityOrder.map((severity) => renderIssueSection(severity, grouped.get(severity) ?? [])).join("");
+  const nextActions = report.riskScore.suggestedNextActions.map((action) => `<li>${escapeHtml(action)}</li>`).join("");
+  const checks = report.checks.map((check) => renderCheckRow(check)).join("");
+  const projectSummary = renderProjectSummary(report);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AppLaunchGuard Report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --card: #131a22;
+      --card-alt: #17202a;
+      --text: #e6edf3;
+      --muted: #94a3b8;
+      --critical: #ef4444;
+      --warning: #f59e0b;
+      --manual: #8b5cf6;
+      --info: #22c55e;
+      --border: #1f2a37;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: 28px; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .badge.low { background: rgba(34, 197, 94, 0.2); color: var(--info); }
+    .badge.medium { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .badge.high { background: rgba(239, 68, 68, 0.2); color: var(--critical); }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 14px; color: var(--muted); }
+    .card .value { font-size: 22px; font-weight: 600; }
+    .card .value span { color: var(--muted); font-size: 14px; margin-left: 4px; }
+    .section { margin-top: 28px; }
+    .section h2 { margin-bottom: 12px; font-size: 20px; }
+    .issue-grid { display: grid; gap: 12px; }
+    .issue {
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .issue h3 { margin: 0 0 6px; font-size: 16px; }
+    .issue .meta-line { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .pill.critical { background: rgba(239, 68, 68, 0.2); color: var(--critical); }
+    .pill.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .pill.manual_review { background: rgba(139, 92, 246, 0.2); color: var(--manual); }
+    .pill.info { background: rgba(34, 197, 94, 0.2); color: var(--info); }
+    .pill.pass { background: rgba(34, 197, 94, 0.2); color: var(--info); }
+    .pill.fail { background: rgba(239, 68, 68, 0.2); color: var(--critical); }
+    .pill.manual { background: rgba(139, 92, 246, 0.2); color: var(--manual); }
+    .pill.warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .muted { color: var(--muted); }
+    code, pre {
+      background: #0d141c;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      border-radius: 8px;
+      display: block;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    ul { padding-left: 18px; }
+    a { color: #7dd3fc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+    @media (max-width: 640px) {
+      .title-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-row">
+        <h1>AppLaunchGuard</h1>
+        <span class="badge ${escapeHtml(report.riskLevel)}">${escapeHtml(capitalize2(report.riskLevel))} risk</span>
+      </div>
+      <div class="meta">Scanned path: ${escapeHtml(report.projectRoot)}</div>
+      <div class="meta">Scanned at: ${escapeHtml(report.scannedAt)}</div>
+      <div class="meta">Risk score: ${escapeHtml(String(report.riskScore.score))}/100</div>
+    </header>
+
+    <section class="grid">
+      ${summaryCards}
+    </section>
+
+    <section class="section">
+      <h2>Risk explanation</h2>
+      <p class="muted">${escapeHtml(report.metadata.disclaimer)}</p>
+    </section>
+
+    ${issueSections}
+
+    <section class="section">
+      <h2>Suggested next actions</h2>
+      <ul>
+        ${nextActions || '<li class="muted">No suggested actions.</li>'}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Checks overview</h2>
+      <div class="issue-grid">
+        ${checks}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Project summary</h2>
+      ${projectSummary}
+    </section>
+
+    <footer>
+      <div>GitHub: <a href="https://github.com/momenbuilds/app-launch-guard">https://github.com/momenbuilds/app-launch-guard</a></div>
+      <div>Star the project if it helped. Support: <a href="https://paypal.me/mxcenterprise">https://paypal.me/mxcenterprise</a></div>
+      <div>${escapeHtml(report.metadata.disclaimer)}</div>
+    </footer>
+  </div>
+</body>
+</html>`;
+}
+function renderSummaryCard(label, value, suffix) {
+  return `
+    <div class="card">
+      <h3>${escapeHtml(label)}</h3>
+      <div class="value">${escapeHtml(value)}<span>${escapeHtml(suffix)}</span></div>
+    </div>
+  `;
+}
+function renderIssueSection(severity, issues) {
+  const titles = {
+    critical: "Critical",
+    warning: "Warnings",
+    manual_review: "Manual review",
+    info: "Info"
+  };
+  const body = issues.length ? issues.map((issue) => renderIssueCard(issue)).join("") : `<div class="issue"><div class="muted">No ${escapeHtml(titles[severity]).toLowerCase()} issues found.</div></div>`;
+  return `
+    <section class="section">
+      <h2>${escapeHtml(titles[severity])}</h2>
+      <div class="issue-grid">
+        ${body}
+      </div>
+    </section>
+  `;
+}
+function renderIssueCard(issue) {
+  const lines = [
+    issue.filePath ? `<div class="meta-line"><strong>File:</strong> ${escapeHtml(issue.filePath)}</div>` : "",
+    issue.evidence ? `<div class="meta-line"><strong>Evidence:</strong><code>${escapeHtml(issue.evidence)}</code></div>` : "",
+    issue.suggestedFix ? `<div class="meta-line"><strong>Suggested fix:</strong> ${escapeHtml(issue.suggestedFix)}</div>` : "",
+    issue.docsUrl ? renderDocsUrl(issue.docsUrl) : ""
+  ].filter(Boolean);
+  return `
+    <div class="issue">
+      <h3>${escapeHtml(issue.title)}</h3>
+      <div class="meta-line">
+        <span class="pill ${escapeHtml(issue.severity)}">${escapeHtml(formatSeverity(issue.severity))}</span>
+        <span class="muted">${escapeHtml(issue.category)}</span>
+      </div>
+      <div>${escapeHtml(issue.description)}</div>
+      ${lines.join("")}
+    </div>
+  `;
+}
+function renderDocsUrl(url) {
+  const safe = sanitizeUrl(url);
+  if (!safe) return "";
+  return `<div class="meta-line"><strong>Docs:</strong> <a href="${escapeHtml(safe)}">${escapeHtml(safe)}</a></div>`;
+}
+function renderCheckRow(check) {
+  const tone = check.status === "fail" ? "fail" : check.status === "warning" ? "warn" : check.status === "manual_review" ? "manual" : "pass";
+  const label = check.status === "manual_review" ? "Manual review" : capitalize2(check.status);
+  return `
+    <div class="issue">
+      <div class="meta-line">
+        <span class="pill ${escapeHtml(tone)}">${escapeHtml(label)}</span>
+        <strong>${escapeHtml(check.name)}</strong>
+      </div>
+    </div>
+  `;
+}
+function renderProjectSummary(report) {
+  const summary = report.projectSummary;
+  return `
+    <div class="issue">
+      <div class="meta-line"><strong>Project root:</strong> ${escapeHtml(summary.projectRoot)}</div>
+      <div class="meta-line"><strong>Confidence score:</strong> ${escapeHtml(String(summary.confidenceScore))}/100</div>
+      <div class="meta-line"><strong>Info.plist files:</strong> ${renderList(summary.detectedPlistFiles)}</div>
+      <div class="meta-line"><strong>Privacy manifests:</strong> ${renderList(summary.detectedPrivacyManifestFiles)}</div>
+      <div class="meta-line"><strong>Swift files:</strong> ${escapeHtml(String(summary.detectedSwiftFilesCount))}</div>
+      <div class="meta-line"><strong>Package managers:</strong> ${renderList(summary.detectedPackageManagers)}</div>
+      <div class="meta-line"><strong>Detected SDKs:</strong> ${renderList(report.metadata.detectedSdks)}</div>
+      <div class="meta-line"><strong>Detected product IDs:</strong> ${renderList(report.metadata.detectedProductIds)}</div>
+      <div class="meta-line"><strong>Found URLs:</strong> ${renderList(report.metadata.foundUrls)}</div>
+    </div>
+  `;
+}
+function renderList(values) {
+  if (!values || values.length === 0) return '<span class="muted">None</span>';
+  return values.map((value) => `<span>${escapeHtml(value)}</span>`).join(", ");
+}
+function groupIssues(issues) {
+  const grouped = /* @__PURE__ */ new Map();
+  for (const severity of severityOrder) grouped.set(severity, []);
+  for (const issue of issues) {
+    grouped.get(issue.severity)?.push(issue);
+  }
+  return grouped;
+}
+function formatSeverity(severity) {
+  if (severity === "manual_review") return "Manual review";
+  return capitalize2(severity);
+}
+function escapeHtml(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function sanitizeUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.toString();
+    return null;
+  } catch {
+    return null;
+  }
+}
+function capitalize2(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
@@ -1280,24 +1581,88 @@ function dedupeIssues(issues) {
   });
 }
 
+// src/utils/openBrowser.ts
+import { spawn } from "child_process";
+async function openBrowser(target) {
+  const platform = process.platform;
+  const { command, args } = resolveOpenCommand(platform, target);
+  await new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: "ignore", detached: true });
+    child.on("error", reject);
+    child.unref();
+    resolve();
+  });
+}
+function resolveOpenCommand(platform, target) {
+  if (platform === "darwin") return { command: "open", args: [target] };
+  if (platform === "win32") return { command: "cmd", args: ["/c", "start", "", target] };
+  return { command: "xdg-open", args: [target] };
+}
+
+// src/utils/server.ts
+import http from "http";
+async function serveHtmlReport(html, port) {
+  return await new Promise((resolve, reject) => {
+    const server = http.createServer((request, response) => {
+      if (request.method !== "GET" || request.url !== "/") {
+        response.statusCode = 404;
+        response.end("Not found");
+        return;
+      }
+      response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      response.end(html);
+    });
+    server.on("error", (error) => {
+      if (error && typeof error === "object" && "code" in error && error.code === "EADDRINUSE") {
+        reject(new Error(`Port ${port} is already in use. Try --port ${port + 1}.`));
+        return;
+      }
+      reject(error);
+    });
+    server.listen(port, "127.0.0.1", () => {
+      resolve({ server, url: `http://localhost:${port}` });
+    });
+  });
+}
+
 // src/cli.ts
 async function runCli(argv = process.argv) {
   const program = new Command();
   program.name("app-launch-guard").description("Scan iOS apps for App Store submission review risks before review.").version(package_default.version);
-  program.command("scan").description("Scan an iOS project for App Store submission risks.").argument("[path]", "Path to the iOS project", ".").option("--json", "Print a machine-readable JSON report").option("--markdown", "Print a Markdown report").option("--output <file>", "Write the report to a file").option("--fail-on <level>", "Exit with code 1 on critical, warning, or none", "none").option("--no-color", "Disable colored terminal output").option("--include-docs", "Scan additional documentation files outside README, docs/, and fastlane metadata").option("--include-all", "Scan all text files except build outputs, node_modules, and .git").action(
+  program.command("scan").description("Scan an iOS project for App Store submission risks.").argument("[path]", "Path to the iOS project", ".").option("--json", "Print a machine-readable JSON report").option("--markdown", "Print a Markdown report").option("--html", "Generate a self-contained HTML report").option("--output <file>", "Write the report to a file").option("--fail-on <level>", "Exit with code 1 on critical, warning, or none", "none").option("--no-color", "Disable colored terminal output").option("--serve", "Serve the HTML report locally").option("--open", "Open the HTML report in the browser").option("--port <number>", "Port for the local HTML report server", "4173").option("--include-docs", "Scan additional documentation files outside README, docs/, and fastlane metadata").option("--include-all", "Scan all text files except build outputs, node_modules, and .git").action(
     async (targetPath, options) => {
       try {
-        const report = await scanProject(targetPath, { includeDocs: options.includeDocs, includeAll: options.includeAll });
         const format = resolveOutputFormat(options);
+        const port = resolvePort(options.port);
+        validateHtmlOptions({ format, serve: options.serve, open: options.open, port: options.port });
+        const report = await scanProject(targetPath, { includeDocs: options.includeDocs, includeAll: options.includeAll });
         const rendered = renderReport(report, format, { noColor: options.color === false });
-        if (options.output) {
-          await writeTextFile(path7.resolve(options.output), rendered);
-          if (!options.json) {
-            process.stdout.write(`AppLaunchGuard report written to ${options.output}
+        const outputPath = resolveOutputPath(format, options.output);
+        if (outputPath) {
+          await writeTextFile(outputPath, rendered);
+          if (format !== "json") {
+            process.stdout.write(`AppLaunchGuard report written to ${outputPath}
 `);
           }
         } else {
           process.stdout.write(rendered);
+        }
+        if (format === "html" && options.serve) {
+          const server = await serveHtmlReport(rendered, port);
+          process.stdout.write(`AppLaunchGuard report available at ${server.url}
+Press Ctrl+C to stop.
+`);
+          if (options.open) {
+            await openBrowser(server.url).catch((error) => {
+              process.stderr.write(`AppLaunchGuard could not open the browser: ${error instanceof Error ? error.message : String(error)}
+`);
+            });
+          }
+        } else if (format === "html" && options.open && outputPath) {
+          await openBrowser(pathToFileURL(outputPath).toString()).catch((error) => {
+            process.stderr.write(`AppLaunchGuard could not open the browser: ${error instanceof Error ? error.message : String(error)}
+`);
+          });
         }
         process.exitCode = shouldFail(report, options.failOn) ? 1 : 0;
       } catch (error) {
@@ -1310,16 +1675,49 @@ async function runCli(argv = process.argv) {
   await program.parseAsync(argv);
 }
 function resolveOutputFormat(options) {
+  const outputs = [options.json, options.markdown, options.html].filter(Boolean).length;
+  if (outputs > 1) {
+    throw new Error("Choose only one of --json, --markdown, or --html.");
+  }
   if (options.json) return "json";
   if (options.markdown) return "markdown";
+  if (options.html) return "html";
   if (options.output?.toLowerCase().endsWith(".json")) return "json";
   if (options.output?.toLowerCase().endsWith(".md")) return "markdown";
+  if (options.output?.toLowerCase().endsWith(".html")) return "html";
   return "terminal";
+}
+function resolveOutputPath(format, output) {
+  if (output) return path7.resolve(output);
+  if (format === "html") return path7.resolve("app-launch-guard-report.html");
+  return void 0;
 }
 function renderReport(report, format, options) {
   if (format === "json") return renderJsonReport(report);
   if (format === "markdown") return renderMarkdownReport(report);
+  if (format === "html") return renderHtmlReport(report);
   return renderTerminalReport(report, options);
+}
+function resolvePort(port) {
+  const parsed = Number(port);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`Invalid port: ${port}. Use a number like 4173.`);
+  }
+  return parsed;
+}
+function validateHtmlOptions(options) {
+  if (options.format !== "html") {
+    if (options.serve || options.open) {
+      throw new Error("Use --html with --serve or --open.");
+    }
+    if (options.port && options.port !== "4173") {
+      throw new Error("Use --port only with --html --serve.");
+    }
+    return;
+  }
+  if (options.port && !options.serve && options.port !== "4173") {
+    throw new Error("Use --port only with --html --serve.");
+  }
 }
 function shouldFail(report, failOn) {
   if (failOn === "critical") return report.summary.critical > 0;
