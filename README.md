@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: momenadel/app-launch-guard@v1
+      - uses: momenbuilds/app-launch-guard@v1
         with:
           path: "."
           output: "markdown"
