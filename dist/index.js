@@ -13,7 +13,7 @@ var package_default = {
   description: "Open-source CLI and GitHub Action that scans iOS apps for App Store submission risks.",
   type: "module",
   bin: {
-    "app-launch-guard": "./dist/index.js"
+    "app-launch-guard": "dist/index.js"
   },
   files: [
     "dist/index.js",
@@ -24,7 +24,7 @@ var package_default = {
   ],
   repository: {
     type: "git",
-    url: "https://github.com/momenbuilds/app-launch-guard.git"
+    url: "git+https://github.com/momenbuilds/app-launch-guard.git"
   },
   bugs: {
     url: "https://github.com/momenbuilds/app-launch-guard/issues"
