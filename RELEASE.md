@@ -19,7 +19,16 @@ Use this checklist before publishing a new release.
 
 ## Release
 
+- [ ] npm login
+- [ ] npm whoami
+- [ ] npm pack --dry-run
+- [ ] Review packed files and confirm no tests, fixtures, local reports, .env files, or private files are included
+- [ ] npm publish --access public
+- [ ] Verify npm page: https://www.npmjs.com/package/app-launch-guard
+- [ ] Test global install:
+  - npm install -g app-launch-guard
+  - app-launch-guard --help
+  - app-launch-guard scan .
 - [ ] Create a git tag (vX.Y.Z)
 - [ ] Push tag to GitHub
 - [ ] Create GitHub release notes
-- [ ] Publish npm package when ready

@@ -16,8 +16,8 @@ var package_default = {
     "app-launch-guard": "./dist/index.js"
   },
   files: [
-    "dist",
-    "action.yml",
+    "dist/index.js",
+    "dist/index.d.ts",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -46,7 +46,8 @@ var package_default = {
     typecheck: "tsc --noEmit",
     lint: "eslint .",
     format: "prettier --write .",
-    scan: "tsx src/index.ts scan"
+    scan: "tsx src/index.ts scan",
+    prepublishOnly: "npm run typecheck && npm test && npm run lint && npm run build"
   },
   dependencies: {
     commander: "^12.1.0",

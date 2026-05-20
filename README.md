@@ -41,7 +41,7 @@ npm link
 app-launch-guard scan .
 ```
 
-After the package is published:
+After npm publish:
 
 ```sh
 npm install -g app-launch-guard
