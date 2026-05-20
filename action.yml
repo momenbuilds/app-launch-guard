@@ -1,0 +1,42 @@
+name: AppLaunchGuard
+description: Scan iOS apps for App Store submission review risks before review.
+author: momenadel
+inputs:
+  path:
+    description: Path to the iOS project.
+    required: false
+    default: "."
+  output:
+    description: Report output format. Use terminal, markdown, or json.
+    required: false
+    default: "markdown"
+  fail-on:
+    description: Fail on critical, warning, or none.
+    required: false
+    default: "critical"
+  no-color:
+    description: Disable colored terminal output.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Run AppLaunchGuard
+      shell: bash
+      run: |
+        args=("scan" "${{ inputs.path }}" "--fail-on" "${{ inputs.fail-on }}")
+        if [ "${{ inputs.output }}" = "markdown" ]; then
+          args+=("--markdown" "--output" "app-launch-guard-report.md")
+        elif [ "${{ inputs.output }}" = "json" ]; then
+          args+=("--json" "--output" "app-launch-guard-report.json")
+        fi
+        if [ "${{ inputs.no-color }}" = "true" ]; then
+          args+=("--no-color")
+        fi
+        node "$GITHUB_ACTION_PATH/dist/index.js" "${args[@]}"
+        if [ -f app-launch-guard-report.md ]; then
+          cat app-launch-guard-report.md
+        fi
+        if [ -f app-launch-guard-report.json ]; then
+          cat app-launch-guard-report.json
+        fi

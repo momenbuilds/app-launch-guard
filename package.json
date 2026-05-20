@@ -1,0 +1,50 @@
+{
+  "name": "app-launch-guard",
+  "version": "0.1.0",
+  "description": "An open-source CLI and GitHub Action that scans iOS apps for App Store submission risks before review.",
+  "type": "module",
+  "bin": {
+    "app-launch-guard": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/momenadel/app-launch-guard.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --sourcemap --clean",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "scan": "tsx src/index.ts scan"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "fast-glob": "^3.3.2",
+    "kleur": "^4.1.5",
+    "plist": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/plist": "^3.0.5",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
+    "tsup": "^8.1.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "vitest": "^2.0.3"
+  }
+}

@@ -1,0 +1,425 @@
+{
+  "toolName": "AppLaunchGuard",
+  "version": "0.1.0",
+  "scannedAt": "2026-05-20T14:25:12.526Z",
+  "projectRoot": "/path/to/ios-bad",
+  "projectSummary": {
+    "projectRoot": "/path/to/ios-bad",
+    "confidenceScore": 77,
+    "detectedProjectFiles": [
+      "BadApp.xcodeproj/project.pbxproj"
+    ],
+    "detectedWorkspaceFiles": [],
+    "detectedPbxprojFiles": [
+      "BadApp.xcodeproj/project.pbxproj"
+    ],
+    "detectedPlistFiles": [
+      "App/Info.plist"
+    ],
+    "detectedPrivacyManifestFiles": [],
+    "detectedSwiftFilesCount": 1,
+    "detectedPackageManagers": [],
+    "warnings": []
+  },
+  "riskScore": {
+    "score": 100,
+    "level": "high",
+    "criticalCount": 4,
+    "warningCount": 8,
+    "manualReviewCount": 9,
+    "infoCount": 2,
+    "topRisks": [
+      {
+        "id": "plist.NSCameraUsageDescription.missing",
+        "title": "Missing camera usage description",
+        "severity": "critical",
+        "category": "Info.plist",
+        "description": "Code appears to use a capability that may require NSCameraUsageDescription, but the key was not found in Info.plist.",
+        "filePath": "App/CameraTrackingSubscriptions.swift",
+        "evidence": "_ = AVCaptureDevice.default(for: .video)",
+        "suggestedFix": "Add NSCameraUsageDescription to Info.plist with a clear user-facing reason.",
+        "docsUrl": "https://developer.apple.com/documentation/bundleresources/information-property-list"
+      },
+      {
+        "id": "privacy_manifest.missing",
+        "title": "PrivacyInfo.xcprivacy not found",
+        "severity": "critical",
+        "category": "Privacy Manifest",
+        "description": "Apple may require privacy manifests for certain data collection, SDKs, and accessed APIs. AppLaunchGuard cannot know the full App Store Connect privacy answers.",
+        "evidence": "import FirebaseAnalytics",
+        "suggestedFix": "Add and manually review PrivacyInfo.xcprivacy for the app target and third-party SDK usage.",
+        "docsUrl": "https://developer.apple.com/documentation/bundleresources/privacy_manifest_files"
+      },
+      {
+        "id": "att.missing_usage_description",
+        "title": "Missing NSUserTrackingUsageDescription",
+        "severity": "critical",
+        "category": "App Tracking Transparency",
+        "description": "AppTrackingTransparency usage was detected, but Info.plist does not include NSUserTrackingUsageDescription.",
+        "filePath": "App/CameraTrackingSubscriptions.swift",
+        "evidence": "import AppTrackingTransparency",
+        "suggestedFix": "Add NSUserTrackingUsageDescription to Info.plist with a clear user-facing reason.",
+        "docsUrl": "https://developer.apple.com/documentation/apptrackingtransparency"
+      },
+      {
+        "id": "security.openai_api_key",
+        "title": "OpenAI API key may be exposed",
+        "severity": "critical",
+        "category": "Security",
+        "description": "A value that looks like a secret was found in source-controlled files. AppLaunchGuard masks secrets in reports, but the repository should be reviewed before publishing.",
+        "filePath": "App/CameraTrackingSubscriptions.swift",
+        "evidence": "sk-t...7890",
+        "suggestedFix": "Move private secrets out of the app and rotate any key that may have been committed."
+      },
+      {
+        "id": "subscriptions.product_ids_missing",
+        "title": "Subscription code detected but product IDs were not found",
+        "severity": "warning",
+        "category": "Subscriptions",
+        "description": "Paywall or subscription code appears to exist, but no obvious App Store product identifiers were found.",
+        "filePath": "App/CameraTrackingSubscriptions.swift",
+        "suggestedFix": "Confirm product identifiers, subscription copy, pricing, and entitlement behavior before App Store submission."
+      }
+    ],
+    "suggestedNextActions": [
+      "Add NSCameraUsageDescription to Info.plist with a clear user-facing reason.",
+      "Add and manually review PrivacyInfo.xcprivacy for the app target and third-party SDK usage.",
+      "Add NSUserTrackingUsageDescription to Info.plist with a clear user-facing reason.",
+      "Move private secrets out of the app and rotate any key that may have been committed.",
+      "Confirm product identifiers, subscription copy, pricing, and entitlement behavior before App Store submission."
+    ]
+  },
+  "riskLevel": "high",
+  "summary": {
+    "critical": 4,
+    "warnings": 8,
+    "manualReview": 9,
+    "info": 2,
+    "totalIssues": 23
+  },
+  "issues": [
+    {
+      "id": "plist.NSCameraUsageDescription.missing",
+      "title": "Missing camera usage description",
+      "severity": "critical",
+      "category": "Info.plist",
+      "description": "Code appears to use a capability that may require NSCameraUsageDescription, but the key was not found in Info.plist.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "evidence": "_ = AVCaptureDevice.default(for: .video)",
+      "suggestedFix": "Add NSCameraUsageDescription to Info.plist with a clear user-facing reason.",
+      "docsUrl": "https://developer.apple.com/documentation/bundleresources/information-property-list"
+    },
+    {
+      "id": "privacy_manifest.missing",
+      "title": "PrivacyInfo.xcprivacy not found",
+      "severity": "critical",
+      "category": "Privacy Manifest",
+      "description": "Apple may require privacy manifests for certain data collection, SDKs, and accessed APIs. AppLaunchGuard cannot know the full App Store Connect privacy answers.",
+      "evidence": "import FirebaseAnalytics",
+      "suggestedFix": "Add and manually review PrivacyInfo.xcprivacy for the app target and third-party SDK usage.",
+      "docsUrl": "https://developer.apple.com/documentation/bundleresources/privacy_manifest_files"
+    },
+    {
+      "id": "att.missing_usage_description",
+      "title": "Missing NSUserTrackingUsageDescription",
+      "severity": "critical",
+      "category": "App Tracking Transparency",
+      "description": "AppTrackingTransparency usage was detected, but Info.plist does not include NSUserTrackingUsageDescription.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "evidence": "import AppTrackingTransparency",
+      "suggestedFix": "Add NSUserTrackingUsageDescription to Info.plist with a clear user-facing reason.",
+      "docsUrl": "https://developer.apple.com/documentation/apptrackingtransparency"
+    },
+    {
+      "id": "security.openai_api_key",
+      "title": "OpenAI API key may be exposed",
+      "severity": "critical",
+      "category": "Security",
+      "description": "A value that looks like a secret was found in source-controlled files. AppLaunchGuard masks secrets in reports, but the repository should be reviewed before publishing.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "evidence": "sk-t...7890",
+      "suggestedFix": "Move private secrets out of the app and rotate any key that may have been committed."
+    },
+    {
+      "id": "subscriptions.product_ids_missing",
+      "title": "Subscription code detected but product IDs were not found",
+      "severity": "warning",
+      "category": "Subscriptions",
+      "description": "Paywall or subscription code appears to exist, but no obvious App Store product identifiers were found.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "suggestedFix": "Confirm product identifiers, subscription copy, pricing, and entitlement behavior before App Store submission."
+    },
+    {
+      "id": "revenuecat.entitlements_missing",
+      "title": "RevenueCat detected but entitlement identifiers were not found",
+      "severity": "warning",
+      "category": "Subscriptions",
+      "description": "RevenueCat projects usually rely on entitlements. Missing or unclear entitlement strings can make review and debugging harder.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "suggestedFix": "Confirm entitlement identifiers and paid access behavior are documented and tested."
+    },
+    {
+      "id": "assets.screenshots_missing",
+      "title": "Screenshot evidence not found",
+      "severity": "warning",
+      "category": "App Store Assets",
+      "description": "No local screenshot folder or fastlane screenshots were found. Confirm iPhone screenshots are ready before submission.",
+      "suggestedFix": "Prepare accurate screenshots, including subscription/paywall screens when paid access exists."
+    },
+    {
+      "id": "assets.ipad_screenshots_missing",
+      "title": "iPad support detected but no iPad screenshot folder found",
+      "severity": "warning",
+      "category": "App Store Assets",
+      "description": "UIDeviceFamily appears to include iPad, but no local iPad screenshot evidence was found.",
+      "suggestedFix": "Confirm 13-inch iPad screenshots are prepared if the app supports iPad."
+    },
+    {
+      "id": "metadata.privacy_url_missing",
+      "title": "Privacy policy URL not found",
+      "severity": "warning",
+      "category": "Metadata",
+      "description": "No privacy policy URL was found in local metadata or docs.",
+      "suggestedFix": "Confirm the App Store listing includes a reachable privacy policy URL."
+    },
+    {
+      "id": "metadata.terms_url_missing",
+      "title": "Terms URL not found",
+      "severity": "warning",
+      "category": "Metadata",
+      "description": "No terms URL was found in local metadata or docs.",
+      "suggestedFix": "Confirm the App Store listing includes terms, especially for subscriptions or paid access."
+    },
+    {
+      "id": "metadata.subscription_copy_missing",
+      "title": "Paid access detected without clear subscription language",
+      "severity": "warning",
+      "category": "Metadata",
+      "description": "Subscription or paywall code was detected, but local metadata does not clearly mention subscription terms or paid access.",
+      "suggestedFix": "Make App Store description, screenshots, and review notes clearly explain paid access and subscription terms."
+    },
+    {
+      "id": "metadata.mental_health_disclaimer_missing",
+      "title": "Mental health disclaimer language not found",
+      "severity": "warning",
+      "category": "Metadata",
+      "description": "Mental health-related text was detected, but AppLaunchGuard did not find obvious disclaimer or emergency guidance language.",
+      "filePath": "README.md",
+      "suggestedFix": "Consider adding clear, appropriate support and emergency guidance where relevant."
+    },
+    {
+      "id": "att.manual_review",
+      "title": "Tracking behavior needs manual review",
+      "severity": "manual_review",
+      "category": "App Tracking Transparency",
+      "description": "Crash analytics or product analytics do not always require ATT unless used for tracking across apps or websites. Review SDK configuration and App Store Connect privacy answers.",
+      "filePath": "App/CameraTrackingSubscriptions.swift"
+    },
+    {
+      "id": "revenuecat.public_key_found",
+      "title": "RevenueCat SDK key found",
+      "severity": "manual_review",
+      "category": "Subscriptions",
+      "description": "RevenueCat public SDK keys are commonly shipped in apps, but confirm this is not a private secret before publishing reports.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "evidence": "appl...3456"
+    },
+    {
+      "id": "subscriptions.metadata_manual_review",
+      "title": "Subscription metadata needs manual review",
+      "severity": "manual_review",
+      "category": "Subscriptions",
+      "description": "If the app uses paid access, App Store text and screenshots should clearly explain subscription terms, gated features, and restoration behavior.",
+      "filePath": "App/CameraTrackingSubscriptions.swift"
+    },
+    {
+      "id": "sdk.firebaseanalytics",
+      "title": "FirebaseAnalytics detected",
+      "severity": "manual_review",
+      "category": "SDK Privacy Review",
+      "description": "FirebaseAnalytics may affect privacy labels, tracking disclosures, or App Store Review questions depending on configuration.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "evidence": "import FirebaseAnalytics",
+      "suggestedFix": "Review what data this SDK collects and how it is disclosed in App Store Connect."
+    },
+    {
+      "id": "sdk.revenuecat",
+      "title": "RevenueCat detected",
+      "severity": "manual_review",
+      "category": "SDK Privacy Review",
+      "description": "RevenueCat may affect privacy labels, tracking disclosures, or App Store Review questions depending on configuration.",
+      "filePath": "App/CameraTrackingSubscriptions.swift",
+      "evidence": "import RevenueCat",
+      "suggestedFix": "Review what data this SDK collects and how it is disclosed in App Store Connect."
+    },
+    {
+      "id": "assets.launch_screen_missing",
+      "title": "Launch screen evidence not found",
+      "severity": "manual_review",
+      "category": "App Store Assets",
+      "description": "No obvious launch screen file was found. This may be fine for some SwiftUI projects, but should be checked before submission."
+    },
+    {
+      "id": "assets.fastlane_metadata_missing",
+      "title": "fastlane metadata not found",
+      "severity": "manual_review",
+      "category": "App Store Assets",
+      "description": "Static scanning cannot read App Store Connect. fastlane metadata is optional, but local metadata makes review text easier to audit."
+    },
+    {
+      "id": "assets.submission_checklist",
+      "title": "App Store asset checklist needs manual review",
+      "severity": "manual_review",
+      "category": "App Store Assets",
+      "description": "Confirm iPhone screenshots, 13-inch iPad screenshots if supported, accurate subscription text, privacy policy URL, terms URL, and support URL."
+    },
+    {
+      "id": "metadata.mental_health_manual_review",
+      "title": "Mental health or therapy-related language detected",
+      "severity": "manual_review",
+      "category": "Metadata",
+      "description": "Make sure app metadata does not claim to replace therapy, includes appropriate disclaimers, includes crisis or emergency guidance if relevant, and does not claim diagnosis or medical treatment unless properly supported.",
+      "filePath": "README.md",
+      "suggestedFix": "Review App Store metadata, onboarding, and screenshots for careful health-related wording."
+    },
+    {
+      "id": "project.detected",
+      "title": "iOS project detected",
+      "severity": "info",
+      "category": "Project Detection",
+      "description": "Project confidence is 77/100."
+    },
+    {
+      "id": "assets.app_icon_found",
+      "title": "App icon found",
+      "severity": "info",
+      "category": "App Store Assets",
+      "description": "AppIcon.appiconset was found.",
+      "filePath": "App/Assets.xcassets/AppIcon.appiconset/Contents.json"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Project detection",
+      "status": "pass",
+      "details": {
+        "projectRoot": "/path/to/ios-bad",
+        "confidenceScore": 77,
+        "detectedProjectFiles": [
+          "BadApp.xcodeproj/project.pbxproj"
+        ],
+        "detectedWorkspaceFiles": [],
+        "detectedPbxprojFiles": [
+          "BadApp.xcodeproj/project.pbxproj"
+        ],
+        "detectedPlistFiles": [
+          "App/Info.plist"
+        ],
+        "detectedPrivacyManifestFiles": [],
+        "detectedSwiftFilesCount": 1,
+        "detectedPackageManagers": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Info.plist permissions",
+      "status": "fail"
+    },
+    {
+      "name": "Privacy manifest",
+      "status": "fail"
+    },
+    {
+      "name": "App Tracking Transparency",
+      "status": "fail"
+    },
+    {
+      "name": "Subscriptions",
+      "status": "warning",
+      "details": {
+        "issues": [
+          {
+            "id": "revenuecat.public_key_found",
+            "title": "RevenueCat SDK key found",
+            "severity": "manual_review",
+            "category": "Subscriptions",
+            "description": "RevenueCat public SDK keys are commonly shipped in apps, but confirm this is not a private secret before publishing reports.",
+            "filePath": "App/CameraTrackingSubscriptions.swift",
+            "evidence": "appl...3456"
+          },
+          {
+            "id": "subscriptions.product_ids_missing",
+            "title": "Subscription code detected but product IDs were not found",
+            "severity": "warning",
+            "category": "Subscriptions",
+            "description": "Paywall or subscription code appears to exist, but no obvious App Store product identifiers were found.",
+            "filePath": "App/CameraTrackingSubscriptions.swift",
+            "suggestedFix": "Confirm product identifiers, subscription copy, pricing, and entitlement behavior before App Store submission."
+          },
+          {
+            "id": "revenuecat.entitlements_missing",
+            "title": "RevenueCat detected but entitlement identifiers were not found",
+            "severity": "warning",
+            "category": "Subscriptions",
+            "description": "RevenueCat projects usually rely on entitlements. Missing or unclear entitlement strings can make review and debugging harder.",
+            "filePath": "App/CameraTrackingSubscriptions.swift",
+            "suggestedFix": "Confirm entitlement identifiers and paid access behavior are documented and tested."
+          },
+          {
+            "id": "subscriptions.metadata_manual_review",
+            "title": "Subscription metadata needs manual review",
+            "severity": "manual_review",
+            "category": "Subscriptions",
+            "description": "If the app uses paid access, App Store text and screenshots should clearly explain subscription terms, gated features, and restoration behavior.",
+            "filePath": "App/CameraTrackingSubscriptions.swift"
+          }
+        ],
+        "detectedRevenueCat": true,
+        "detectedStoreKit": false,
+        "detectedProductIds": [],
+        "detectedEntitlementIds": [],
+        "detectedOfferingIds": []
+      }
+    },
+    {
+      "name": "SDK privacy review",
+      "status": "manual_review",
+      "details": {
+        "detectedSdks": [
+          "FirebaseAnalytics",
+          "RevenueCat"
+        ]
+      }
+    },
+    {
+      "name": "App Store assets",
+      "status": "warning"
+    },
+    {
+      "name": "Security",
+      "status": "fail"
+    },
+    {
+      "name": "Metadata",
+      "status": "warning",
+      "details": {
+        "foundUrls": [
+          "https://example.com/support"
+        ],
+        "mentalHealthDetected": true
+      }
+    }
+  ],
+  "metadata": {
+    "disclaimer": "AppLaunchGuard helps reduce review risk, but it does not guarantee App Store approval. Developers are responsible for reviewing Apple’s latest guidelines, App Store Connect privacy answers, and legal requirements.",
+    "scannedFiles": 5,
+    "detectedSdks": [
+      "FirebaseAnalytics",
+      "RevenueCat"
+    ],
+    "detectedProductIds": [],
+    "foundUrls": [
+      "https://example.com/support"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+name: AppLaunchGuard
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  app-launch-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: momenadel/app-launch-guard@v1
+        with:
+          path: "."
+          output: "markdown"
+          fail-on: "critical"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-launch-guard-report
+          path: app-launch-guard-report.md
