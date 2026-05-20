@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-export const ignoredDirectories = [
+export const includeAllIgnoredDirectories = [
   'node_modules',
   '.git',
   'DerivedData',
@@ -9,11 +9,49 @@ export const ignoredDirectories = [
   'dist',
   '.next',
   'coverage',
-  'Pods',
   'Carthage/Build',
   '.swiftpm',
   '.turbo',
 ];
+
+export const defaultIgnoredDirectories = [
+  ...includeAllIgnoredDirectories,
+  'Pods',
+  '.claude',
+  '.cursor',
+  '.windsurf',
+  '.openai',
+  '.codex',
+];
+
+export const defaultIgnoredGlobs = ['**/conversation.md', '**/transcripts/**', '**/logs/**', '**/*.log'];
+
+const binaryExtensions = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.bmp',
+  '.tiff',
+  '.ico',
+  '.icns',
+  '.pdf',
+  '.zip',
+  '.gz',
+  '.tar',
+  '.tgz',
+  '.rar',
+  '.7z',
+  '.mp3',
+  '.mp4',
+  '.mov',
+  '.avi',
+  '.mkv',
+  '.wav',
+  '.aiff',
+  '.caf',
+]);
 
 export function toPosixPath(filePath: string): string {
   return filePath.split(path.sep).join('/');
@@ -21,6 +59,18 @@ export function toPosixPath(filePath: string): string {
 
 export function relativePath(root: string, filePath: string): string {
   return toPosixPath(path.relative(root, filePath));
+}
+
+export function isBinaryFile(filePath: string): boolean {
+  const lower = filePath.toLowerCase();
+  for (const extension of binaryExtensions) {
+    if (lower.endsWith(extension)) return true;
+  }
+  return false;
+}
+
+export function isTextFile(filePath: string): boolean {
+  return !isBinaryFile(filePath);
 }
 
 export async function readTextFile(filePath: string, maxBytes = 512_000): Promise<string | null> {
@@ -38,23 +88,3 @@ export async function writeTextFile(filePath: string, contents: string): Promise
   await fs.writeFile(filePath, contents, 'utf8');
 }
 
-export function shouldScanTextFile(filePath: string): boolean {
-  const lower = filePath.toLowerCase();
-  return [
-    '.swift',
-    '.plist',
-    '.xcprivacy',
-    '.pbxproj',
-    'podfile',
-    'cartfile',
-    'package.swift',
-    'package.resolved',
-    '.md',
-    '.txt',
-    '.json',
-    '.yml',
-    '.yaml',
-    '.entitlements',
-    '.storyboard',
-  ].some((suffix) => lower.endsWith(suffix) || lower.endsWith(`/${suffix}`));
-}

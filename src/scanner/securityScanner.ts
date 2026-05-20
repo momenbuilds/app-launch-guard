@@ -15,7 +15,7 @@ const secretRules = [
 export async function scanSecurity(context: ScanContext): Promise<Issue[]> {
   const issues: Issue[] = [];
 
-  for (const file of context.textFiles) {
+  for (const file of context.securityFiles) {
     const text = await readTextFile(file);
     if (!text) continue;
     const rel = relativePath(context.root, file);

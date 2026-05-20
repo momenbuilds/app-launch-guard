@@ -4,3 +4,10 @@ coverage/
 .env
 .env.*
 npm-debug.log*
+
+# Local scan reports
+bad-report.json
+bad-report.md
+mira-report.md
+*-report.md
+*-report.json

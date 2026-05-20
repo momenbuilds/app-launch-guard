@@ -48,6 +48,19 @@ describe('scanProject', () => {
     const secret = report.issues.find((issue) => issue.category === 'Security');
     expect(secret?.evidence).not.toContain('testsecretvalue1234567890');
   });
+
+  it('ignores doc noise by default but still reads README metadata', async () => {
+    const report = await scanProject(path.join(fixtures, 'ios-doc-noise'));
+    expect(report.metadata.detectedSdks.length).toBe(0);
+    expect(report.issues.some((issue) => issue.category === 'SDK Privacy Review')).toBe(false);
+    expect(report.issues.some((issue) => issue.id === 'metadata.privacy_url_missing')).toBe(false);
+    expect(report.metadata.foundUrls).toContain('https://example.com/privacy');
+  });
+
+  it('includes doc noise with include-all', async () => {
+    const report = await scanProject(path.join(fixtures, 'ios-doc-noise'), { includeAll: true });
+    expect(report.metadata.detectedSdks).toEqual(expect.arrayContaining(['RevenueCat', 'Superwall', 'Adjust', 'PostHog']));
+  });
 });
 
 describe('risk scoring', () => {
@@ -58,7 +71,7 @@ describe('risk scoring', () => {
       { id: 'c', title: 'C', severity: 'manual_review', category: 'x', description: 'x' },
     ];
     const score = calculateRiskScore(issues);
-    expect(score.score).toBe(32);
+    expect(score.score).toBe(30);
     expect(score.level).toBe('medium');
   });
 });

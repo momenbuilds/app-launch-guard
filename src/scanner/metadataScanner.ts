@@ -30,9 +30,20 @@ export async function scanMetadata(context: ScanContext, hasSubscriptions: boole
   let mentalHealthFile: string | undefined;
   let hasDisclaimerLanguage = false;
   let hasSubscriptionLanguage = false;
+  const cachedText = new Map<string, string>();
 
-  for (const file of context.textFiles) {
+  const metadataFiles = context.metadataFiles;
+  const mentalHealthFiles = context.mentalHealthFiles;
+
+  const readCached = async (file: string): Promise<string | null> => {
+    if (cachedText.has(file)) return cachedText.get(file) ?? null;
     const text = await readTextFile(file);
+    if (text) cachedText.set(file, text);
+    return text;
+  };
+
+  for (const file of metadataFiles) {
+    const text = await readCached(file);
     if (!text) continue;
     const rel = relativePath(context.root, file);
     for (const url of extractUrls(text)) foundUrls.add(url);
@@ -41,16 +52,29 @@ export async function scanMetadata(context: ScanContext, hasSubscriptions: boole
     if (/subscription|free trial|auto-renew|restore purchases|terms of use|paid access|premium/i.test(text)) hasSubscriptionLanguage = true;
   }
 
+  if (!mentalHealthFile) {
+    for (const file of mentalHealthFiles) {
+      const text = await readCached(file);
+      if (!text) continue;
+      if (mentalHealthPatterns.some((pattern) => pattern.test(text))) {
+        mentalHealthFile = relativePath(context.root, file);
+        break;
+      }
+    }
+  }
+
   const urls = [...foundUrls];
   const hasPrivacy = urls.some((url) => /privacy/i.test(url));
   const hasTerms = urls.some((url) => /terms|tos|eula/i.test(url));
   const hasSupport = urls.some((url) => /support|help|contact/i.test(url));
 
+  const hasMetadataSignals = metadataFiles.length > 0 || foundUrls.size > 0 || hasDisclaimerLanguage || hasSubscriptionLanguage;
+
   if (!hasPrivacy) {
     issues.push({
       id: 'metadata.privacy_url_missing',
       title: 'Privacy policy URL not found',
-      severity: 'warning',
+      severity: hasMetadataSignals ? 'warning' : 'manual_review',
       category: 'Metadata',
       description: 'No privacy policy URL was found in local metadata or docs.',
       suggestedFix: 'Confirm the App Store listing includes a reachable privacy policy URL.',
@@ -60,7 +84,7 @@ export async function scanMetadata(context: ScanContext, hasSubscriptions: boole
     issues.push({
       id: 'metadata.terms_url_missing',
       title: 'Terms URL not found',
-      severity: hasSubscriptions ? 'warning' : 'manual_review',
+      severity: 'manual_review',
       category: 'Metadata',
       description: 'No terms URL was found in local metadata or docs.',
       suggestedFix: 'Confirm the App Store listing includes terms, especially for subscriptions or paid access.',

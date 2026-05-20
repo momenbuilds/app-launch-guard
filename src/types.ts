@@ -76,10 +76,15 @@ export interface ScanContext {
   swiftFiles: string[];
   plistFiles: string[];
   privacyManifestFiles: string[];
-  textFiles: string[];
+  sourceFiles: string[];
+  sdkFiles: string[];
+  securityFiles: string[];
+  metadataFiles: string[];
+  mentalHealthFiles: string[];
   projectSummary: ProjectSummary;
 }
 
 export interface ScanOptions {
-  noColor?: boolean;
+  includeDocs?: boolean;
+  includeAll?: boolean;
 }

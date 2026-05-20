@@ -23,7 +23,7 @@ export async function scanAnalyticsSdks(context: ScanContext): Promise<{ issues:
   const detected = new Set<string>();
 
   for (const sdk of sdkRules) {
-    const matches = await searchFiles(context.root, context.textFiles, [sdk.pattern]);
+    const matches = await searchFiles(context.root, context.sdkFiles, [sdk.pattern]);
     if (matches.length === 0 || detected.has(sdk.name)) continue;
     detected.add(sdk.name);
 

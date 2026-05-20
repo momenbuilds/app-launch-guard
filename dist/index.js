@@ -192,7 +192,7 @@ import path6 from "path";
 // src/utils/fileSystem.ts
 import fs from "fs/promises";
 import path from "path";
-var ignoredDirectories = [
+var includeAllIgnoredDirectories = [
   "node_modules",
   ".git",
   "DerivedData",
@@ -200,16 +200,61 @@ var ignoredDirectories = [
   "dist",
   ".next",
   "coverage",
-  "Pods",
   "Carthage/Build",
   ".swiftpm",
   ".turbo"
 ];
+var defaultIgnoredDirectories = [
+  ...includeAllIgnoredDirectories,
+  "Pods",
+  ".claude",
+  ".cursor",
+  ".windsurf",
+  ".openai",
+  ".codex"
+];
+var defaultIgnoredGlobs = ["**/conversation.md", "**/transcripts/**", "**/logs/**", "**/*.log"];
+var binaryExtensions = /* @__PURE__ */ new Set([
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".bmp",
+  ".tiff",
+  ".ico",
+  ".icns",
+  ".pdf",
+  ".zip",
+  ".gz",
+  ".tar",
+  ".tgz",
+  ".rar",
+  ".7z",
+  ".mp3",
+  ".mp4",
+  ".mov",
+  ".avi",
+  ".mkv",
+  ".wav",
+  ".aiff",
+  ".caf"
+]);
 function toPosixPath(filePath) {
   return filePath.split(path.sep).join("/");
 }
 function relativePath(root, filePath) {
   return toPosixPath(path.relative(root, filePath));
+}
+function isBinaryFile(filePath) {
+  const lower = filePath.toLowerCase();
+  for (const extension of binaryExtensions) {
+    if (lower.endsWith(extension)) return true;
+  }
+  return false;
+}
+function isTextFile(filePath) {
+  return !isBinaryFile(filePath);
 }
 async function readTextFile(filePath, maxBytes = 512e3) {
   try {
@@ -224,32 +269,14 @@ async function writeTextFile(filePath, contents) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, contents, "utf8");
 }
-function shouldScanTextFile(filePath) {
-  const lower = filePath.toLowerCase();
-  return [
-    ".swift",
-    ".plist",
-    ".xcprivacy",
-    ".pbxproj",
-    "podfile",
-    "cartfile",
-    "package.swift",
-    "package.resolved",
-    ".md",
-    ".txt",
-    ".json",
-    ".yml",
-    ".yaml",
-    ".entitlements",
-    ".storyboard"
-  ].some((suffix) => lower.endsWith(suffix) || lower.endsWith(`/${suffix}`));
-}
 
 // src/utils/glob.ts
 import fg from "fast-glob";
 import path2 from "path";
-async function listProjectFiles(root) {
-  const ignore = ignoredDirectories.map((directory) => `**/${directory}/**`);
+async function listProjectFiles(root, options = {}) {
+  const directories = options.includeAll ? includeAllIgnoredDirectories : defaultIgnoredDirectories;
+  const ignore = directories.map((directory) => `**/${directory}/**`);
+  if (!options.includeAll) ignore.push(...defaultIgnoredGlobs);
   const entries = await fg(["**/*"], {
     cwd: root,
     absolute: true,
@@ -331,7 +358,7 @@ async function scanAnalyticsSdks(context) {
   const issues = [];
   const detected = /* @__PURE__ */ new Set();
   for (const sdk of sdkRules) {
-    const matches = await searchFiles(context.root, context.textFiles, [sdk.pattern]);
+    const matches = await searchFiles(context.root, context.sdkFiles, [sdk.pattern]);
     if (matches.length === 0 || detected.has(sdk.name)) continue;
     detected.add(sdk.name);
     const isHigherRisk = sdk.risk === "ads" || sdk.risk === "attribution";
@@ -431,7 +458,7 @@ async function scanAppStoreAssets(context) {
     issues.push({
       id: "assets.screenshots_missing",
       title: "Screenshot evidence not found",
-      severity: "warning",
+      severity: "manual_review",
       category: "App Store Assets",
       description: "No local screenshot folder or fastlane screenshots were found. Confirm iPhone screenshots are ready before submission.",
       suggestedFix: "Prepare accurate screenshots, including subscription/paywall screens when paid access exists."
@@ -549,8 +576,17 @@ async function scanMetadata(context, hasSubscriptions) {
   let mentalHealthFile;
   let hasDisclaimerLanguage = false;
   let hasSubscriptionLanguage = false;
-  for (const file of context.textFiles) {
+  const cachedText = /* @__PURE__ */ new Map();
+  const metadataFiles = context.metadataFiles;
+  const mentalHealthFiles = context.mentalHealthFiles;
+  const readCached = async (file) => {
+    if (cachedText.has(file)) return cachedText.get(file) ?? null;
     const text = await readTextFile(file);
+    if (text) cachedText.set(file, text);
+    return text;
+  };
+  for (const file of metadataFiles) {
+    const text = await readCached(file);
     if (!text) continue;
     const rel = relativePath(context.root, file);
     for (const url of extractUrls(text)) foundUrls.add(url);
@@ -558,15 +594,26 @@ async function scanMetadata(context, hasSubscriptions) {
     if (/not (a )?(substitute|replacement) for (therapy|medical)|emergency|crisis|call emergency/i.test(text)) hasDisclaimerLanguage = true;
     if (/subscription|free trial|auto-renew|restore purchases|terms of use|paid access|premium/i.test(text)) hasSubscriptionLanguage = true;
   }
+  if (!mentalHealthFile) {
+    for (const file of mentalHealthFiles) {
+      const text = await readCached(file);
+      if (!text) continue;
+      if (mentalHealthPatterns.some((pattern) => pattern.test(text))) {
+        mentalHealthFile = relativePath(context.root, file);
+        break;
+      }
+    }
+  }
   const urls = [...foundUrls];
   const hasPrivacy = urls.some((url) => /privacy/i.test(url));
   const hasTerms = urls.some((url) => /terms|tos|eula/i.test(url));
   const hasSupport = urls.some((url) => /support|help|contact/i.test(url));
+  const hasMetadataSignals = metadataFiles.length > 0 || foundUrls.size > 0 || hasDisclaimerLanguage || hasSubscriptionLanguage;
   if (!hasPrivacy) {
     issues.push({
       id: "metadata.privacy_url_missing",
       title: "Privacy policy URL not found",
-      severity: "warning",
+      severity: hasMetadataSignals ? "warning" : "manual_review",
       category: "Metadata",
       description: "No privacy policy URL was found in local metadata or docs.",
       suggestedFix: "Confirm the App Store listing includes a reachable privacy policy URL."
@@ -576,7 +623,7 @@ async function scanMetadata(context, hasSubscriptions) {
     issues.push({
       id: "metadata.terms_url_missing",
       title: "Terms URL not found",
-      severity: hasSubscriptions ? "warning" : "manual_review",
+      severity: "manual_review",
       category: "Metadata",
       description: "No terms URL was found in local metadata or docs.",
       suggestedFix: "Confirm the App Store listing includes terms, especially for subscriptions or paid access."
@@ -745,7 +792,7 @@ async function scanPlists(context) {
 // src/scanner/privacyManifestScanner.ts
 async function scanPrivacyManifest(context) {
   const issues = [];
-  const riskySignals = await searchFiles(context.root, context.textFiles, [
+  const riskySignals = await searchFiles(context.root, context.sdkFiles, [
     /FirebaseAnalytics/i,
     /Mixpanel/i,
     /Amplitude/i,
@@ -887,7 +934,7 @@ async function scanRevenueCat(context) {
   let detectedRevenueCat = false;
   let detectedStoreKit = false;
   let firstSubscriptionFile;
-  const subscriptionFiles = context.textFiles.filter((file) => !file.endsWith(".plist") && !file.endsWith(".xcprivacy"));
+  const subscriptionFiles = context.sdkFiles.filter((file) => !file.endsWith(".plist") && !file.endsWith(".xcprivacy"));
   for (const file of subscriptionFiles) {
     const text = await readTextFile(file);
     if (!text) continue;
@@ -966,7 +1013,7 @@ function calculateRiskScore(issues) {
   const warningCount = issues.filter((issue) => issue.severity === "warning").length;
   const manualReviewCount = issues.filter((issue) => issue.severity === "manual_review").length;
   const infoCount = issues.filter((issue) => issue.severity === "info").length;
-  const score = Math.min(100, criticalCount * 20 + warningCount * 8 + manualReviewCount * 4);
+  const score = Math.min(100, criticalCount * 20 + warningCount * 8 + manualReviewCount * 2);
   const level = score <= 24 ? "low" : score <= 59 ? "medium" : "high";
   const topRisks = sortIssues(issues).filter((issue) => issue.severity !== "info").slice(0, 5);
   return {
@@ -997,7 +1044,7 @@ var secretRules = [
 ];
 async function scanSecurity(context) {
   const issues = [];
-  for (const file of context.textFiles) {
+  for (const file of context.securityFiles) {
     const text = await readTextFile(file);
     if (!text) continue;
     const rel = relativePath(context.root, file);
@@ -1030,17 +1077,22 @@ function dedupeSecurityIssues(issues) {
 }
 
 // src/scanner/scanProject.ts
-async function scanProject(targetPath) {
+async function scanProject(targetPath, options = {}) {
   const root = path6.resolve(targetPath);
-  const files = await listProjectFiles(root);
+  const files = await listProjectFiles(root, { includeAll: options.includeAll });
   const projectSummary = detectIosProject(root, files);
+  const scope = buildScanScope(root, files, options);
   const context = {
     root,
     files,
-    swiftFiles: files.filter((file) => file.endsWith(".swift")),
-    plistFiles: files.filter((file) => file.endsWith("Info.plist")),
-    privacyManifestFiles: files.filter((file) => file.endsWith("PrivacyInfo.xcprivacy")),
-    textFiles: files.filter(shouldScanTextFile),
+    swiftFiles: scope.swiftFiles,
+    plistFiles: scope.plistFiles,
+    privacyManifestFiles: scope.privacyManifestFiles,
+    sourceFiles: scope.sourceFiles,
+    sdkFiles: scope.sdkFiles,
+    securityFiles: scope.securityFiles,
+    metadataFiles: scope.metadataFiles,
+    mentalHealthFiles: scope.mentalHealthFiles,
     projectSummary
   };
   const issues = [];
@@ -1124,6 +1176,74 @@ async function scanProject(targetPath) {
     }
   };
 }
+function buildScanScope(root, files, options) {
+  const swiftFiles = files.filter((file) => file.endsWith(".swift"));
+  const plistFiles = files.filter((file) => file.endsWith("Info.plist"));
+  const privacyManifestFiles = files.filter((file) => file.endsWith("PrivacyInfo.xcprivacy"));
+  const sourceFiles = files.filter((file) => isSourceConfigFile(relativePath(root, file)));
+  const metadataFiles = files.filter((file) => isMetadataFile(relativePath(root, file), Boolean(options.includeDocs)));
+  const localizationFiles = files.filter((file) => isLocalizationFile(relativePath(root, file)));
+  const allTextFiles = files.filter((file) => isTextFile(file));
+  const sdkFiles = options.includeAll ? allTextFiles : sourceFiles;
+  const securityFiles = options.includeAll ? allTextFiles : sourceFiles.filter((file) => !isTestFixtureFile(root, file));
+  const mentalHealthFiles = options.includeAll ? allTextFiles : uniqueFiles([...swiftFiles, ...localizationFiles, ...metadataFiles]);
+  return {
+    swiftFiles,
+    plistFiles,
+    privacyManifestFiles,
+    sourceFiles,
+    sdkFiles,
+    securityFiles,
+    metadataFiles: options.includeAll ? allTextFiles : metadataFiles,
+    mentalHealthFiles
+  };
+}
+function isSourceConfigFile(relativeFile) {
+  const lower = relativeFile.toLowerCase();
+  const base = path6.basename(lower);
+  const sourceExtensions = [
+    ".swift",
+    ".plist",
+    ".xcprivacy",
+    ".pbxproj",
+    ".entitlements",
+    ".storyboard",
+    ".xib",
+    ".xcconfig",
+    ".strings",
+    ".stringsdict",
+    ".xcstrings"
+  ];
+  const sourceNames = /* @__PURE__ */ new Set(["podfile", "cartfile", "package.swift", "package.resolved"]);
+  if (sourceNames.has(base)) return true;
+  if (sourceExtensions.some((extension) => lower.endsWith(extension))) return true;
+  return lower.includes(".xcassets/") && base === "contents.json";
+}
+function isMetadataFile(relativeFile, includeDocs) {
+  const lower = relativeFile.toLowerCase();
+  const base = path6.basename(lower);
+  if (base === "readme.md") return true;
+  if (/(^|\/)docs\//.test(lower)) return true;
+  if (lower.includes("fastlane/metadata/")) return true;
+  if (/(^|\/)(appstore|app-store|app_store)\//.test(lower)) return true;
+  if (includeDocs && isDocFile(lower)) return true;
+  return false;
+}
+function isLocalizationFile(relativeFile) {
+  const lower = relativeFile.toLowerCase();
+  return [".strings", ".stringsdict", ".xcstrings"].some((extension) => lower.endsWith(extension));
+}
+function isDocFile(relativeFile) {
+  const lower = relativeFile.toLowerCase();
+  return [".md", ".markdown", ".mdx", ".txt", ".rst", ".adoc"].some((extension) => lower.endsWith(extension));
+}
+function isTestFixtureFile(root, filePath) {
+  const rel = relativePath(root, filePath);
+  return rel.startsWith("test/fixtures/");
+}
+function uniqueFiles(files) {
+  return [...new Set(files)];
+}
 function statusForCategory(issues, category) {
   const categoryIssues = issues.filter((issue) => issue.category === category);
   if (categoryIssues.some((issue) => issue.severity === "critical")) return "fail";
@@ -1145,27 +1265,29 @@ function dedupeIssues(issues) {
 async function runCli(argv = process.argv) {
   const program = new Command();
   program.name("app-launch-guard").description("Scan iOS apps for App Store submission review risks before review.").version(package_default.version);
-  program.command("scan").description("Scan an iOS project for App Store submission risks.").argument("[path]", "Path to the iOS project", ".").option("--json", "Print a machine-readable JSON report").option("--markdown", "Print a Markdown report").option("--output <file>", "Write the report to a file").option("--fail-on <level>", "Exit with code 1 on critical, warning, or none", "none").option("--no-color", "Disable colored terminal output").action(async (targetPath, options) => {
-    try {
-      const report = await scanProject(targetPath);
-      const format = resolveOutputFormat(options);
-      const rendered = renderReport(report, format, { noColor: options.color === false });
-      if (options.output) {
-        await writeTextFile(path7.resolve(options.output), rendered);
-        if (!options.json) {
-          process.stdout.write(`AppLaunchGuard report written to ${options.output}
+  program.command("scan").description("Scan an iOS project for App Store submission risks.").argument("[path]", "Path to the iOS project", ".").option("--json", "Print a machine-readable JSON report").option("--markdown", "Print a Markdown report").option("--output <file>", "Write the report to a file").option("--fail-on <level>", "Exit with code 1 on critical, warning, or none", "none").option("--no-color", "Disable colored terminal output").option("--include-docs", "Scan additional documentation files outside README, docs/, and fastlane metadata").option("--include-all", "Scan all text files except build outputs, node_modules, and .git").action(
+    async (targetPath, options) => {
+      try {
+        const report = await scanProject(targetPath, { includeDocs: options.includeDocs, includeAll: options.includeAll });
+        const format = resolveOutputFormat(options);
+        const rendered = renderReport(report, format, { noColor: options.color === false });
+        if (options.output) {
+          await writeTextFile(path7.resolve(options.output), rendered);
+          if (!options.json) {
+            process.stdout.write(`AppLaunchGuard report written to ${options.output}
 `);
+          }
+        } else {
+          process.stdout.write(rendered);
         }
-      } else {
-        process.stdout.write(rendered);
-      }
-      process.exitCode = shouldFail(report, options.failOn) ? 1 : 0;
-    } catch (error) {
-      process.stderr.write(`AppLaunchGuard scan failed: ${error instanceof Error ? error.message : String(error)}
+        process.exitCode = shouldFail(report, options.failOn) ? 1 : 0;
+      } catch (error) {
+        process.stderr.write(`AppLaunchGuard scan failed: ${error instanceof Error ? error.message : String(error)}
 `);
-      process.exitCode = 1;
+        process.exitCode = 1;
+      }
     }
-  });
+  );
   await program.parseAsync(argv);
 }
 function resolveOutputFormat(options) {

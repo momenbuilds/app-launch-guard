@@ -1,9 +1,16 @@
 import fg from 'fast-glob';
 import path from 'node:path';
-import { ignoredDirectories, toPosixPath } from './fileSystem.js';
+import { defaultIgnoredDirectories, defaultIgnoredGlobs, includeAllIgnoredDirectories, toPosixPath } from './fileSystem.js';
 
-export async function listProjectFiles(root: string): Promise<string[]> {
-  const ignore = ignoredDirectories.map((directory) => `**/${directory}/**`);
+export interface FileListOptions {
+  includeAll?: boolean;
+}
+
+export async function listProjectFiles(root: string, options: FileListOptions = {}): Promise<string[]> {
+  const directories = options.includeAll ? includeAllIgnoredDirectories : defaultIgnoredDirectories;
+  const ignore = directories.map((directory) => `**/${directory}/**`);
+  if (!options.includeAll) ignore.push(...defaultIgnoredGlobs);
+
   const entries = await fg(['**/*'], {
     cwd: root,
     absolute: true,

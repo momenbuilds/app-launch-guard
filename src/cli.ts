@@ -29,9 +29,15 @@ export async function runCli(argv = process.argv): Promise<void> {
     .option('--output <file>', 'Write the report to a file')
     .option('--fail-on <level>', 'Exit with code 1 on critical, warning, or none', 'none')
     .option('--no-color', 'Disable colored terminal output')
-    .action(async (targetPath: string, options: { json?: boolean; markdown?: boolean; output?: string; failOn: FailOn; color: boolean }) => {
+    .option('--include-docs', 'Scan additional documentation files outside README, docs/, and fastlane metadata')
+    .option('--include-all', 'Scan all text files except build outputs, node_modules, and .git')
+    .action(
+      async (
+        targetPath: string,
+        options: { json?: boolean; markdown?: boolean; output?: string; failOn: FailOn; color: boolean; includeDocs?: boolean; includeAll?: boolean }
+      ) => {
       try {
-        const report = await scanProject(targetPath);
+        const report = await scanProject(targetPath, { includeDocs: options.includeDocs, includeAll: options.includeAll });
         const format = resolveOutputFormat(options);
         const rendered = renderReport(report, format, { noColor: options.color === false });
 
@@ -49,7 +55,8 @@ export async function runCli(argv = process.argv): Promise<void> {
         process.stderr.write(`AppLaunchGuard scan failed: ${error instanceof Error ? error.message : String(error)}\n`);
         process.exitCode = 1;
       }
-    });
+      }
+    );
 
   await program.parseAsync(argv);
 }

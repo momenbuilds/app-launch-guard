@@ -20,7 +20,7 @@ export async function scanRevenueCat(context: ScanContext): Promise<RevenueCatRe
   let detectedStoreKit = false;
   let firstSubscriptionFile: string | undefined;
 
-  const subscriptionFiles = context.textFiles.filter((file) => !file.endsWith('.plist') && !file.endsWith('.xcprivacy'));
+  const subscriptionFiles = context.sdkFiles.filter((file) => !file.endsWith('.plist') && !file.endsWith('.xcprivacy'));
 
   for (const file of subscriptionFiles) {
     const text = await readTextFile(file);

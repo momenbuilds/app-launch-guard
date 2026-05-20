@@ -6,7 +6,7 @@ export function calculateRiskScore(issues: Issue[]): RiskScore {
   const warningCount = issues.filter((issue) => issue.severity === 'warning').length;
   const manualReviewCount = issues.filter((issue) => issue.severity === 'manual_review').length;
   const infoCount = issues.filter((issue) => issue.severity === 'info').length;
-  const score = Math.min(100, criticalCount * 20 + warningCount * 8 + manualReviewCount * 4);
+  const score = Math.min(100, criticalCount * 20 + warningCount * 8 + manualReviewCount * 2);
   const level: RiskLevel = score <= 24 ? 'low' : score <= 59 ? 'medium' : 'high';
   const topRisks = sortIssues(issues).filter((issue) => issue.severity !== 'info').slice(0, 5);
 

@@ -5,7 +5,7 @@ import { searchFiles } from '../utils/textSearch.js';
 
 export async function scanPrivacyManifest(context: ScanContext): Promise<Issue[]> {
   const issues: Issue[] = [];
-  const riskySignals = await searchFiles(context.root, context.textFiles, [
+  const riskySignals = await searchFiles(context.root, context.sdkFiles, [
     /FirebaseAnalytics/i,
     /Mixpanel/i,
     /Amplitude/i,

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import pkg from '../../package.json' assert { type: 'json' };
-import type { CheckResult, Issue, ScanContext, ScanReport } from '../types.js';
-import { shouldScanTextFile } from '../utils/fileSystem.js';
+import type { CheckResult, Issue, ScanContext, ScanOptions, ScanReport } from '../types.js';
+import { isTextFile, relativePath } from '../utils/fileSystem.js';
 import { listProjectFiles } from '../utils/glob.js';
 import { sortIssues } from '../utils/severity.js';
 import { scanAnalyticsSdks } from './analyticsScanner.js';
@@ -15,18 +15,23 @@ import { scanRevenueCat } from './revenueCatScanner.js';
 import { calculateRiskScore } from './riskScore.js';
 import { scanSecurity } from './securityScanner.js';
 
-export async function scanProject(targetPath: string): Promise<ScanReport> {
+export async function scanProject(targetPath: string, options: ScanOptions = {}): Promise<ScanReport> {
   const root = path.resolve(targetPath);
-  const files = await listProjectFiles(root);
+  const files = await listProjectFiles(root, { includeAll: options.includeAll });
   const projectSummary = detectIosProject(root, files);
+  const scope = buildScanScope(root, files, options);
 
   const context: ScanContext = {
     root,
     files,
-    swiftFiles: files.filter((file) => file.endsWith('.swift')),
-    plistFiles: files.filter((file) => file.endsWith('Info.plist')),
-    privacyManifestFiles: files.filter((file) => file.endsWith('PrivacyInfo.xcprivacy')),
-    textFiles: files.filter(shouldScanTextFile),
+    swiftFiles: scope.swiftFiles,
+    plistFiles: scope.plistFiles,
+    privacyManifestFiles: scope.privacyManifestFiles,
+    sourceFiles: scope.sourceFiles,
+    sdkFiles: scope.sdkFiles,
+    securityFiles: scope.securityFiles,
+    metadataFiles: scope.metadataFiles,
+    mentalHealthFiles: scope.mentalHealthFiles,
     projectSummary,
   };
 
@@ -116,6 +121,92 @@ export async function scanProject(targetPath: string): Promise<ScanReport> {
       foundUrls: metadata.foundUrls,
     },
   };
+}
+
+function buildScanScope(root: string, files: string[], options: ScanOptions): {
+  swiftFiles: string[];
+  plistFiles: string[];
+  privacyManifestFiles: string[];
+  sourceFiles: string[];
+  sdkFiles: string[];
+  securityFiles: string[];
+  metadataFiles: string[];
+  mentalHealthFiles: string[];
+} {
+  const swiftFiles = files.filter((file) => file.endsWith('.swift'));
+  const plistFiles = files.filter((file) => file.endsWith('Info.plist'));
+  const privacyManifestFiles = files.filter((file) => file.endsWith('PrivacyInfo.xcprivacy'));
+  const sourceFiles = files.filter((file) => isSourceConfigFile(relativePath(root, file)));
+  const metadataFiles = files.filter((file) => isMetadataFile(relativePath(root, file), Boolean(options.includeDocs)));
+  const localizationFiles = files.filter((file) => isLocalizationFile(relativePath(root, file)));
+  const allTextFiles = files.filter((file) => isTextFile(file));
+  const sdkFiles = options.includeAll ? allTextFiles : sourceFiles;
+  const securityFiles = options.includeAll ? allTextFiles : sourceFiles.filter((file) => !isTestFixtureFile(root, file));
+  const mentalHealthFiles = options.includeAll ? allTextFiles : uniqueFiles([...swiftFiles, ...localizationFiles, ...metadataFiles]);
+
+  return {
+    swiftFiles,
+    plistFiles,
+    privacyManifestFiles,
+    sourceFiles,
+    sdkFiles,
+    securityFiles,
+    metadataFiles: options.includeAll ? allTextFiles : metadataFiles,
+    mentalHealthFiles,
+  };
+}
+
+function isSourceConfigFile(relativeFile: string): boolean {
+  const lower = relativeFile.toLowerCase();
+  const base = path.basename(lower);
+  const sourceExtensions = [
+    '.swift',
+    '.plist',
+    '.xcprivacy',
+    '.pbxproj',
+    '.entitlements',
+    '.storyboard',
+    '.xib',
+    '.xcconfig',
+    '.strings',
+    '.stringsdict',
+    '.xcstrings',
+  ];
+  const sourceNames = new Set(['podfile', 'cartfile', 'package.swift', 'package.resolved']);
+  if (sourceNames.has(base)) return true;
+  if (sourceExtensions.some((extension) => lower.endsWith(extension))) return true;
+  return lower.includes('.xcassets/') && base === 'contents.json';
+}
+
+function isMetadataFile(relativeFile: string, includeDocs: boolean): boolean {
+  const lower = relativeFile.toLowerCase();
+  const base = path.basename(lower);
+  if (base === 'readme.md') return true;
+  if (/(^|\/)docs\//.test(lower)) return true;
+  if (lower.includes('fastlane/metadata/')) return true;
+  if (/(^|\/)(appstore|app-store|app_store)\//.test(lower)) return true;
+
+  if (includeDocs && isDocFile(lower)) return true;
+  return false;
+}
+
+function isLocalizationFile(relativeFile: string): boolean {
+  const lower = relativeFile.toLowerCase();
+  return ['.strings', '.stringsdict', '.xcstrings'].some((extension) => lower.endsWith(extension));
+}
+
+function isDocFile(relativeFile: string): boolean {
+  const lower = relativeFile.toLowerCase();
+  return ['.md', '.markdown', '.mdx', '.txt', '.rst', '.adoc'].some((extension) => lower.endsWith(extension));
+}
+
+function isTestFixtureFile(root: string, filePath: string): boolean {
+  const rel = relativePath(root, filePath);
+  return rel.startsWith('test/fixtures/');
+}
+
+function uniqueFiles(files: string[]): string[] {
+  return [...new Set(files)];
 }
 
 function statusForCategory(issues: Issue[], category: string): CheckResult['status'] {

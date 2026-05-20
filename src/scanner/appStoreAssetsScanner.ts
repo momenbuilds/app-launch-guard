@@ -69,7 +69,7 @@ export async function scanAppStoreAssets(context: ScanContext): Promise<Issue[]>
     issues.push({
       id: 'assets.screenshots_missing',
       title: 'Screenshot evidence not found',
-      severity: 'warning',
+      severity: 'manual_review',
       category: 'App Store Assets',
       description: 'No local screenshot folder or fastlane screenshots were found. Confirm iPhone screenshots are ready before submission.',
       suggestedFix: 'Prepare accurate screenshots, including subscription/paywall screens when paid access exists.',
