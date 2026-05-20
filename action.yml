@@ -1,6 +1,9 @@
 name: AppLaunchGuard
-description: Scan iOS apps for App Store submission review risks before review.
-author: momenadel
+description: Scan iOS apps for App Store submission risks before review.
+author: Momen Adel
+branding:
+  icon: shield
+  color: blue
 inputs:
   path:
     description: Path to the iOS project.
@@ -18,6 +21,14 @@ inputs:
     description: Disable colored terminal output.
     required: false
     default: "true"
+  include-docs:
+    description: Scan additional documentation files outside README, docs/, and fastlane metadata.
+    required: false
+    default: "false"
+  include-all:
+    description: Scan all text files except dependency, build output, and git folders.
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -32,6 +43,12 @@ runs:
         fi
         if [ "${{ inputs.no-color }}" = "true" ]; then
           args+=("--no-color")
+        fi
+        if [ "${{ inputs.include-docs }}" = "true" ]; then
+          args+=("--include-docs")
+        fi
+        if [ "${{ inputs.include-all }}" = "true" ]; then
+          args+=("--include-all")
         fi
         node "$GITHUB_ACTION_PATH/dist/index.js" "${args[@]}"
         if [ -f app-launch-guard-report.md ]; then

@@ -25,8 +25,8 @@
     "score": 100,
     "level": "high",
     "criticalCount": 4,
-    "warningCount": 8,
-    "manualReviewCount": 9,
+    "warningCount": 6,
+    "manualReviewCount": 11,
     "infoCount": 2,
     "topRisks": [
       {
@@ -92,8 +92,8 @@
   "riskLevel": "high",
   "summary": {
     "critical": 4,
-    "warnings": 8,
-    "manualReview": 9,
+    "warnings": 6,
+    "manualReview": 11,
     "info": 2,
     "totalIssues": 23
   },
@@ -161,7 +161,7 @@
     {
       "id": "assets.screenshots_missing",
       "title": "Screenshot evidence not found",
-      "severity": "warning",
+      "severity": "manual_review",
       "category": "App Store Assets",
       "description": "No local screenshot folder or fastlane screenshots were found. Confirm iPhone screenshots are ready before submission.",
       "suggestedFix": "Prepare accurate screenshots, including subscription/paywall screens when paid access exists."
@@ -185,7 +185,7 @@
     {
       "id": "metadata.terms_url_missing",
       "title": "Terms URL not found",
-      "severity": "warning",
+      "severity": "manual_review",
       "category": "Metadata",
       "description": "No terms URL was found in local metadata or docs.",
       "suggestedFix": "Confirm the App Store listing includes terms, especially for subscriptions or paid access."

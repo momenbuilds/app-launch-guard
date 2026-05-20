@@ -46,18 +46,15 @@ function issueSection(title: string, issues: Issue[]): string {
     return `## ${title}\n\nNone found.\n`;
   }
 
-  return [
-    `## ${title}`,
-    '',
-    ...issues.map((issue) => {
-      const lines = [`### ${issue.title}`, '', `Severity: ${labels[issue.severity]}`, '', issue.description];
-      if (issue.filePath) lines.push('', `File: \`${issue.filePath}\``);
-      if (issue.evidence) lines.push('', `Evidence: \`${issue.evidence}\``);
-      if (issue.suggestedFix) lines.push('', `Suggested fix: ${issue.suggestedFix}`);
-      return lines.join('\n');
-    }),
-    '',
-  ].join('\n');
+  const blocks = issues.map((issue) => {
+    const lines = [`### ${issue.title}`, '', `Severity: ${labels[issue.severity]}`, '', issue.description];
+    if (issue.filePath) lines.push('', `File: \`${issue.filePath}\``);
+    if (issue.evidence) lines.push('', `Evidence: \`${issue.evidence}\``);
+    if (issue.suggestedFix) lines.push('', `Suggested fix: ${issue.suggestedFix}`);
+    return lines.join('\n');
+  });
+
+  return [`## ${title}`, '', blocks.join('\n\n'), ''].join('\n');
 }
 
 function capitalize(value: string): string {

@@ -10,11 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: momenadel/app-launch-guard@v1
+      - uses: momenbuilds/app-launch-guard@v1
         with:
           path: "."
           output: "markdown"
           fail-on: "critical"
+          no-color: "true"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

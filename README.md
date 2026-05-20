@@ -1,8 +1,9 @@
 # AppLaunchGuard
 
-An open-source CLI and GitHub Action that scans iOS apps for App Store submission risks before review.
+[![CI](https://github.com/momenbuilds/app-launch-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/momenbuilds/app-launch-guard/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-AppLaunchGuard helps developers catch App Store review risks before they submit.
+An open-source CLI and GitHub Action that helps iOS developers catch App Store submission risks before review.
 
 ## What it does
 
@@ -13,39 +14,44 @@ AppLaunchGuard statically scans an iOS project and produces terminal, JSON, or M
 - PrivacyInfo.xcprivacy coverage
 - App Tracking Transparency mismatches
 - RevenueCat, StoreKit, paywall, and subscription signals
-- Analytics, crash, ads, and attribution SDKs
+- Analytics, crash, ads, and attribution SDK signals
 - App icons, screenshots, fastlane metadata, and iPad screenshot evidence
-- Exposed secrets
-- Mental health, therapy, and medical-language review notes
-- Privacy policy, terms, support URL, and subscription metadata checks
+- Exposed secrets (masked in reports)
+- Mental health, therapy, medical, and crisis language review notes
+- Privacy policy, terms, and support URL evidence
 
 ## Why it exists
 
-Many App Store Review problems are avoidable but easy to miss: privacy metadata, tracking confusion, unclear subscriptions, missing screenshots, or sensitive app wording. AppLaunchGuard turns that painful launch checklist into a local, testable tool for indie iOS developers, AI app builders, and small teams.
+Many App Store Review issues are avoidable but easy to miss: privacy metadata, tracking confusion, unclear subscriptions, missing screenshots, or sensitive app wording. AppLaunchGuard turns that checklist into a local, testable tool for indie iOS developers and small teams.
 
-## Install
+## Installation
 
-```sh
-npm install -g app-launch-guard
-```
-
-For local development:
+Local development:
 
 ```sh
 npm install
 npm run build
+node dist/index.js scan .
+```
+
+Linked local CLI:
+
+```sh
+npm link
+app-launch-guard scan .
+```
+
+After the package is published:
+
+```sh
+npm install -g app-launch-guard
+app-launch-guard scan .
 ```
 
 ## Quick start
 
 ```sh
 app-launch-guard scan .
-```
-
-Or from this repository:
-
-```sh
-npm run dev -- scan test/fixtures/ios-basic
 ```
 
 ## CLI usage
@@ -56,44 +62,45 @@ app-launch-guard scan .
 app-launch-guard scan /path/to/ios/project
 app-launch-guard scan --json
 app-launch-guard scan --markdown
-app-launch-guard scan --output report.json
 app-launch-guard scan --output report.md
+app-launch-guard scan --output report.json
 app-launch-guard scan --fail-on critical
 app-launch-guard scan --fail-on warning
+app-launch-guard scan --fail-on none
+app-launch-guard scan --include-docs
+app-launch-guard scan --include-all
 app-launch-guard scan --no-color
 app-launch-guard --help
 app-launch-guard scan --help
 ```
 
-`--fail-on` supports:
+## Scan scope
 
-- `none`: always exit 0 unless the scan has an internal error
-- `critical`: exit 1 if critical issues exist
-- `warning`: exit 1 if warning or critical issues exist
+By default, AppLaunchGuard focuses on iOS source and config files plus app-facing metadata:
 
-The local CLI defaults to `--fail-on none`.
+- iOS source and config files (Swift, plist, privacy manifests, Xcode project files)
+- App assets and configuration evidence
+- README.md, docs/, and fastlane metadata
 
-## Example output
+SDK detection stays in source and config files, while README/docs/fastlane are used for metadata and disclaimer checks.
 
-```text
-AppLaunchGuard
+It ignores noisy AI/dev folders and transcript files by default, including .claude, .cursor, .windsurf, .openai, .codex, conversation.md, logs, node_modules, build outputs, and .git. This prevents false positives from AI assistant transcripts, notes, and random logs.
 
-Project
-✓ iOS project detected
-Root: /Users/example/MyApp
-Confidence: 92/100
+Use `--include-docs` to scan broader documentation files, or `--include-all` to scan all text files except dependency, build, and git folders.
 
-Risk Summary
-Risk level: Medium
-Risk score: 48/100
-Critical: 1
-Warnings: 4
-Manual review: 3
+## Reports
 
-Critical Issues
-✗ Missing NSUserTrackingUsageDescription
-  AppTrackingTransparency usage was detected, but Info.plist does not include NSUserTrackingUsageDescription.
-  Suggested fix: Add NSUserTrackingUsageDescription to Info.plist with a clear user-facing reason.
+AppLaunchGuard can output reports in three formats:
+
+- Terminal output for quick local scans
+- Markdown output for PR comments or artifacts
+- JSON output for automation or dashboards
+
+Examples:
+
+```sh
+app-launch-guard scan . --markdown --output report.md
+app-launch-guard scan . --json --output report.json
 ```
 
 ## GitHub Action usage
@@ -118,18 +125,45 @@ jobs:
           fail-on: "critical"
 ```
 
-The example workflow in `examples/github-action` also uploads `app-launch-guard-report.md` as an artifact.
+If you are using the action before a tagged v1 release, reference main:
+
+```yaml
+- uses: momenbuilds/app-launch-guard@main
+```
+
+Action inputs: `path`, `output`, `fail-on`, `no-color`, `include-docs`, `include-all`.
+
+## Example output
+
+```text
+AppLaunchGuard
+
+Project
+✓ iOS project detected
+Root: /Users/example/MyApp
+Confidence: 92/100
+
+Risk Summary
+Risk level: Medium
+Risk score: 48/100
+Critical: 1
+Warnings: 4
+Manual review: 3
+
+Critical Issues
+✗ Missing NSUserTrackingUsageDescription
+  AppTrackingTransparency usage was detected, but Info.plist does not include NSUserTrackingUsageDescription.
+  Suggested fix: Add NSUserTrackingUsageDescription to Info.plist with a clear user-facing reason.
+```
 
 ## What AppLaunchGuard checks
 
-AppLaunchGuard checks for local signals that may affect App Store Review:
-
 - Permission APIs used without matching Info.plist usage descriptions
 - Privacy manifest presence, parseability, and key coverage
-- ATT API usage without `NSUserTrackingUsageDescription`
+- ATT API usage without NSUserTrackingUsageDescription
 - Tracking usage description without obvious ATT code
 - RevenueCat and StoreKit subscription configuration signals
-- Common analytics, crash, ads, attribution, push, and paywall SDKs
+- Common analytics, crash, ads, attribution, push, and paywall SDK signals
 - App icon, screenshot, iPad screenshot, and fastlane metadata evidence
 - Common exposed secret patterns, with masked output
 - Mental health, therapy, medical, crisis, and AI companion language
@@ -139,8 +173,7 @@ AppLaunchGuard checks for local signals that may affect App Store Review:
 
 AppLaunchGuard does not:
 
-- Guarantee App Store approval
-- Guarantee App Store rejection
+- Guarantee App Store approval or rejection
 - Replace Apple guidelines, legal review, or App Store Connect privacy answers
 - Connect to App Store Connect
 - Upload your code
@@ -148,41 +181,33 @@ AppLaunchGuard does not:
 - Make external network calls during scans
 - Use AI in v1
 
-## JSON report
+## Exit codes and fail-on behavior
 
-```sh
-app-launch-guard scan . --json --output report.json
-```
+`--fail-on` supports:
 
-The JSON report is stable and includes:
+- `none`: always exit 0 unless the scan has an internal error
+- `critical`: exit 1 if critical issues exist
+- `warning`: exit 1 if warning or critical issues exist
 
-- tool name and version
-- scanned path and timestamp
-- project summary
-- risk score and risk level
-- issue list
-- check results
-- report metadata
+The default is `--fail-on none` for the CLI. The GitHub Action defaults to `fail-on: critical`.
 
-## Markdown report
+## Common use cases
 
-```sh
-app-launch-guard scan . --markdown --output report.md
-```
-
-Markdown reports are useful for PR comments, release checklists, and GitHub Action artifacts.
-
-## Roadmap
-
-See `ROADMAP.md`.
+- Preflight App Store submissions before release
+- Catch missing privacy manifests or ATT text before review
+- Validate subscription, paywall, and metadata copy
+- Produce Markdown reports for PRs
+- Keep App Store assets and screenshots checklist visible
 
 ## Contributing
 
-See `CONTRIBUTING.md`.
+See CONTRIBUTING.md for setup, testing, and contribution guidelines.
 
-## Security
+## Support the project
 
-See `SECURITY.md`. AppLaunchGuard has no telemetry by default and does not send project contents to external services.
+If AppLaunchGuard helped you catch a review issue or saved you time, a GitHub star helps more developers find it. You can also support development through PayPal: https://paypal.me/mxcenterprise.
+
+Contributions, issues, and feedback are welcome.
 
 ## Disclaimer
 
@@ -191,3 +216,22 @@ AppLaunchGuard helps reduce review risk, but it does not guarantee App Store app
 ## License
 
 MIT
+
+## Development
+
+```sh
+npm install
+npm run typecheck
+npm test
+npm run lint
+npm run build
+```
+
+Fixture scans:
+
+```sh
+node dist/index.js scan test/fixtures/ios-basic --no-color
+node dist/index.js scan test/fixtures/ios-bad --no-color
+node dist/index.js scan test/fixtures/ios-doc-noise --no-color
+node dist/index.js scan test/fixtures/ios-doc-noise --include-all --no-color
+```

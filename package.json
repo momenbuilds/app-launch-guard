@@ -1,7 +1,7 @@
 {
   "name": "app-launch-guard",
   "version": "0.1.0",
-  "description": "An open-source CLI and GitHub Action that scans iOS apps for App Store submission risks before review.",
+  "description": "Open-source CLI and GitHub Action that scans iOS apps for App Store submission risks.",
   "type": "module",
   "bin": {
     "app-launch-guard": "./dist/index.js"
@@ -10,13 +10,23 @@
     "dist",
     "action.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/momenadel/app-launch-guard.git"
+    "url": "https://github.com/momenbuilds/app-launch-guard.git"
   },
+  "bugs": {
+    "url": "https://github.com/momenbuilds/app-launch-guard/issues"
+  },
+  "homepage": "https://github.com/momenbuilds/app-launch-guard#readme",
+  "author": "Momen Adel",
   "license": "MIT",
+  "funding": {
+    "type": "custom",
+    "url": "https://paypal.me/mxcenterprise"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -46,5 +56,18 @@
     "tsx": "^4.16.2",
     "typescript": "^5.5.3",
     "vitest": "^2.0.3"
-  }
+  },
+  "keywords": [
+    "ios",
+    "app-store",
+    "app-store-review",
+    "privacy",
+    "privacy-manifest",
+    "revenuecat",
+    "storekit",
+    "cli",
+    "github-action",
+    "swift",
+    "app-launch"
+  ]
 }

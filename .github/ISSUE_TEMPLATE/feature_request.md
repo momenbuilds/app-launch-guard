@@ -9,6 +9,8 @@ labels: enhancement
 
 ## Proposed solution
 
+## Why this helps App Store readiness
+
 ## Alternatives considered
 
 ## Examples

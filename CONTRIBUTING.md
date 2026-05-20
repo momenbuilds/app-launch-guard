@@ -2,7 +2,7 @@
 
 Thanks for helping make AppLaunchGuard more useful for indie iOS developers and small teams.
 
-## Install
+## Setup
 
 ```sh
 npm install
@@ -11,37 +11,33 @@ npm install
 ## Run locally
 
 ```sh
-npm run dev -- scan test/fixtures/ios-basic
-npm run dev -- scan test/fixtures/ios-bad --markdown
+npm run build
+node dist/index.js scan test/fixtures/ios-basic
+node dist/index.js scan test/fixtures/ios-bad --markdown
 ```
 
-## Test
+## Tests
 
 ```sh
 npm run typecheck
 npm test
-npm run build
-```
-
-Run linting before opening a PR:
-
-```sh
 npm run lint
+npm run build
 ```
 
 ## Add a scanner
 
-Scanners live in `src/scanner`. Prefer a small function that accepts `ScanContext` and returns issues or a small result object. Keep wording careful:
+Scanners live in src/scanner. Prefer a small function that accepts ScanContext and returns issues or a small result object. Keep wording careful:
 
 - Say "review risk", "potential issue", "needs manual review", or "may cause App Store Review confusion".
 - Do not say a finding guarantees approval or rejection.
 - Do not print secrets or private values.
 
-Wire the scanner into `src/scanner/scanProject.ts`, add report metadata only if useful, and add focused tests.
+Wire the scanner into src/scanner/scanProject.ts, add report metadata only if useful, and add focused tests.
 
 ## Add fixtures
 
-Fixtures live in `test/fixtures`. Keep them small and fake. They should not require Xcode, real signing assets, real API keys, or network access.
+Fixtures live in test/fixtures. Keep them small and fake. They should not require Xcode, real signing assets, real API keys, or network access.
 
 ## Coding style
 

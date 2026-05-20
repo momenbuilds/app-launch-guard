@@ -9,7 +9,7 @@ import path7 from "path";
 var package_default = {
   name: "app-launch-guard",
   version: "0.1.0",
-  description: "An open-source CLI and GitHub Action that scans iOS apps for App Store submission risks before review.",
+  description: "Open-source CLI and GitHub Action that scans iOS apps for App Store submission risks.",
   type: "module",
   bin: {
     "app-launch-guard": "./dist/index.js"
@@ -18,13 +18,23 @@ var package_default = {
     "dist",
     "action.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   repository: {
     type: "git",
-    url: "https://github.com/momenadel/app-launch-guard.git"
+    url: "https://github.com/momenbuilds/app-launch-guard.git"
   },
+  bugs: {
+    url: "https://github.com/momenbuilds/app-launch-guard/issues"
+  },
+  homepage: "https://github.com/momenbuilds/app-launch-guard#readme",
+  author: "Momen Adel",
   license: "MIT",
+  funding: {
+    type: "custom",
+    url: "https://paypal.me/mxcenterprise"
+  },
   engines: {
     node: ">=18"
   },
@@ -54,7 +64,20 @@ var package_default = {
     tsx: "^4.16.2",
     typescript: "^5.5.3",
     vitest: "^2.0.3"
-  }
+  },
+  keywords: [
+    "ios",
+    "app-store",
+    "app-store-review",
+    "privacy",
+    "privacy-manifest",
+    "revenuecat",
+    "storekit",
+    "cli",
+    "github-action",
+    "swift",
+    "app-launch"
+  ]
 };
 
 // src/reporters/jsonReporter.ts
@@ -109,18 +132,14 @@ function issueSection(title, issues) {
 None found.
 `;
   }
-  return [
-    `## ${title}`,
-    "",
-    ...issues.map((issue) => {
-      const lines = [`### ${issue.title}`, "", `Severity: ${labels[issue.severity]}`, "", issue.description];
-      if (issue.filePath) lines.push("", `File: \`${issue.filePath}\``);
-      if (issue.evidence) lines.push("", `Evidence: \`${issue.evidence}\``);
-      if (issue.suggestedFix) lines.push("", `Suggested fix: ${issue.suggestedFix}`);
-      return lines.join("\n");
-    }),
-    ""
-  ].join("\n");
+  const blocks = issues.map((issue) => {
+    const lines = [`### ${issue.title}`, "", `Severity: ${labels[issue.severity]}`, "", issue.description];
+    if (issue.filePath) lines.push("", `File: \`${issue.filePath}\``);
+    if (issue.evidence) lines.push("", `Evidence: \`${issue.evidence}\``);
+    if (issue.suggestedFix) lines.push("", `Suggested fix: ${issue.suggestedFix}`);
+    return lines.join("\n");
+  });
+  return [`## ${title}`, "", blocks.join("\n\n"), ""].join("\n");
 }
 function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);

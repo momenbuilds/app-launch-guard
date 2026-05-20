@@ -21,6 +21,10 @@ app-launch-guard scan .
 
 ## Actual behavior
 
+## Report snippet
+
+Paste a short excerpt of the report if helpful. Do not include secrets.
+
 ## Sample project
 
 If possible, share a minimal project or fixture that reproduces the issue. Do not share private repos or secrets.

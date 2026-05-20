@@ -2,7 +2,7 @@
 
 ## Reporting vulnerabilities
 
-Please report security issues privately to the maintainers rather than opening a public issue. If a public security contact has not been configured yet, open a minimal issue asking for a private contact path without including exploit details.
+Please report security issues privately to the maintainers rather than opening a public issue. If GitHub Security Advisories are not available yet, open a minimal issue asking for a private contact path without including exploit details.
 
 ## Secret handling
 
